@@ -27,7 +27,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
 
   // Initialize particles
-  const initParticles = () => {
+  const initParticles = useCallback(() => {
     particlesRef.current = []
     for (let i = 0; i < particleCount; i++) {
       particlesRef.current.push({
@@ -42,7 +42,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
         maxLife: Math.random() * 100 + 50
       })
     }
-  }
+  }, [dimensions.width, dimensions.height, particleCount])
 
   // Update canvas dimensions
   const updateDimensions = () => {
@@ -57,7 +57,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
   }
 
   // Animation loop
-  const animate = () => {
+  const animate = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -129,7 +129,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
     })
 
     animationRef.current = requestAnimationFrame(animate)
-  }
+  }, [dimensions.width, dimensions.height, isMusicPlaying])
 
   // Handle window resize
   useEffect(() => {
@@ -145,7 +145,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
     return () => {
       window.removeEventListener('resize', handleResize)
     }
-  }, [])
+  }, [initParticles])
 
   // Start/stop animation based on dimensions
   useEffect(() => {
@@ -161,7 +161,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [dimensions, isMusicPlaying])
+  }, [dimensions, isMusicPlaying, animate])
 
   return (
     <>

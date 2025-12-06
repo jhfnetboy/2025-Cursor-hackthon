@@ -1,82 +1,114 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { ElevenLabsClient, play } from '@elevenlabs/elevenlabs-js'
 
 interface BackgroundMusicProps {
   onMusicStateChange?: (isPlaying: boolean) => void
 }
 
-// Music generation prompts for coding background
-const musicPrompts = [
-  'gentle ambient electronic music with soft synth pads and subtle beats, perfect for coding focus',
-  'calm lo-fi beats with smooth piano melodies and light percussion, ideal for concentration',
-  'atmospheric electronic soundscape with distant echoes and warm synthesizer textures',
-  'minimalist ambient music with soft arpeggios and gentle reverb, great for deep work',
-  'ethereal electronic composition with floating melodies and subtle rhythmic elements',
-  'peaceful electronic ambient with smooth transitions and harmonic progressions',
-  'soft electronic music with warm pads and delicate rhythmic patterns for coding sessions',
-  'tranquil synthesizer music with gentle modulations and ambient textures',
-  'calm electronic soundscape with subtle beats and melodic synth lines',
-  'minimal ambient electronic with smooth transitions and peaceful atmosphere'
-]
+const BACKEND_URL = 'http://localhost:3000'
 
 const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ onMusicStateChange }) => {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const [currentTrack, setCurrentTrack] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>('')
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking')
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const clientRef = useRef<ElevenLabsClient | null>(null)
 
-  // Initialize ElevenLabs client
+  // Check backend health on mount
   useEffect(() => {
-    const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY
-    if (!apiKey) {
-      setError('Please set VITE_ELEVENLABS_API_KEY in your .env file')
-      return
+    const checkBackendHealth = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/health`)
+        if (response.ok) {
+          setBackendStatus('online')
+        } else {
+          setBackendStatus('offline')
+          setError('Backend service is not responding correctly')
+        }
+      } catch (err) {
+        setBackendStatus('offline')
+        setError('Cannot connect to backend service. Please start the backend server.')
+        console.error('Backend health check failed:', err)
+      }
     }
 
-    try {
-      clientRef.current = new ElevenLabsClient({
-        apiKey: apiKey
-      })
-    } catch (err) {
-      setError('Failed to initialize ElevenLabs client')
-      console.error('ElevenLabs initialization error:', err)
-    }
+    checkBackendHealth()
   }, [])
 
-  // Generate random music
+  // Generate random music via backend API
   const generateRandomMusic = useCallback(async () => {
-    if (!clientRef.current) return
+    if (backendStatus !== 'online') {
+      setError('Backend service is not available')
+      return
+    }
 
     setIsLoading(true)
     setError('')
 
     try {
-      // Select random prompt
-      const randomPrompt = musicPrompts[Math.floor(Math.random() * musicPrompts.length)]
-      setCurrentTrack(`🎵 ${randomPrompt}`)
+      console.log('🎵 Requesting music from backend...')
 
-      // Generate audio using ElevenLabs
-      const audio = await clientRef.current.textToSpeech.convert(
-        'JBFqnCBsd6RMkjVDRZzb', // voice_id - using a calm voice
-        {
-          text: `Create ${randomPrompt}. Make it continuous and loopable.`,
-          modelId: 'eleven_multilingual_v2',
-          outputFormat: 'mp3_44100_128',
-        }
+      // Call backend API
+      const response = await fetch(`${BACKEND_URL}/api/generate-music`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to generate music')
+      }
+
+      const data = await response.json()
+
+      if (!data.success || !data.audioData) {
+        throw new Error('Invalid response from backend')
+      }
+
+      // Convert base64 to blob
+      const audioBlob = new Blob(
+        [Uint8Array.from(atob(data.audioData), c => c.charCodeAt(0))],
+        { type: data.contentType || 'audio/mpeg' }
       )
 
-      // Play the generated music
-      await play(audio)
+      // Create audio URL
+      const audioUrl = URL.createObjectURL(audioBlob)
 
+      // Create and play audio
+      const audio = new Audio(audioUrl)
+      audio.volume = 0.3 // Set moderate volume
+
+      // Set up event listeners
+      audio.addEventListener('ended', () => {
+        URL.revokeObjectURL(audioUrl) // Clean up URL
+      })
+
+      audio.addEventListener('error', (e) => {
+        console.error('Audio playback error:', e)
+        URL.revokeObjectURL(audioUrl)
+      })
+
+      // Store reference for cleanup
+      audioRef.current = audio
+
+      // Play the music
+      await audio.play()
+
+      // Update UI with track info
+      setCurrentTrack(`🎵 ${data.prompt}`)
       setIsLoading(false)
+
+      console.log('✅ Music generated and playing:', data.prompt)
+
     } catch (err) {
-      setError('Failed to generate music. Check your API key and connection.')
-      console.error('Music generation error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate music'
+      setError(errorMessage)
+      console.error('❌ Music generation error:', err)
       setIsLoading(false)
     }
-  }, [])
+  }, [backendStatus])
 
   // Handle play/pause
   const toggleMusic = () => {
@@ -91,7 +123,9 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ onMusicStateChange })
       // Stop current music
       if (audioRef.current) {
         audioRef.current.pause()
+        audioRef.current = null
       }
+      setCurrentTrack('')
     }
   }
 
@@ -122,7 +156,7 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ onMusicStateChange })
         <div className="control-section">
           <button
             onClick={toggleMusic}
-            disabled={isLoading || !!error}
+            disabled={isLoading || !!error || backendStatus !== 'online'}
             className={`play-button ${isMusicPlaying ? 'playing' : ''} ${isLoading ? 'loading' : ''}`}
           >
             {isLoading ? (
@@ -140,19 +174,31 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ onMusicStateChange })
             {error && (
               <div className="error-indicator">
                 <span className="error-icon">⚠️</span>
-                <span className="error-text">API Key Required</span>
+                <span className="error-text">{error}</span>
               </div>
             )}
-            {currentTrack && !error && (
+            {backendStatus === 'offline' && !error && (
+              <div className="error-indicator">
+                <span className="error-icon">🔌</span>
+                <span className="error-text">Backend service offline</span>
+              </div>
+            )}
+            {currentTrack && !error && backendStatus === 'online' && (
               <div className="track-info">
                 <div className="track-label">Now Playing</div>
                 <div className="track-name">{currentTrack.replace('🎵 ', '')}</div>
               </div>
             )}
-            {!currentTrack && !error && !isLoading && (
+            {!currentTrack && !error && backendStatus === 'online' && !isLoading && (
               <div className="ready-state">
                 <div className="ready-icon">🎵</div>
                 <div className="ready-text">Ready to generate music</div>
+              </div>
+            )}
+            {backendStatus === 'checking' && (
+              <div className="ready-state">
+                <div className="ready-icon">🔄</div>
+                <div className="ready-text">Connecting to backend...</div>
               </div>
             )}
           </div>
