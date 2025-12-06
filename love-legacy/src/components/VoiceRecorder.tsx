@@ -104,7 +104,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       const arrayBuffer = await audioBlob.arrayBuffer();
       const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-      const response = await fetch('/api/speech-to-text', {
+      const response = await fetch('http://localhost:3000/api/speech-to-text', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -133,15 +133,17 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
     } catch (error) {
       console.error('Transcription error:', error);
-      setRecordings(prev => prev.map(recording =>
-        recording.id === recordingId
-          ? {
-              ...recording,
-              isTranscribing: false,
-              transcriptionError: 'Failed to transcribe audio. Please try again.'
-            }
-          : recording
-      ));
+      // Find and update the recording with error
+      const recording = voiceRecordings.find(r => r.id === recordingId);
+      if (recording) {
+        const updatedRecording: VoiceRecording = {
+          ...recording,
+          transcription: 'Failed to transcribe audio. Please try again.',
+          transcriptionError: true,
+          apiUsed: 'Error'
+        };
+        onUpdateVoiceRecording(updatedRecording);
+      }
     }
   };
 
@@ -310,7 +312,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
                       {formatTime(recording.duration)}
                     </span>
                     <span className="recording-date">
-                      {formatDate(recording.recordedAt)}
+                      {formatDate(new Date(recording.createdAt))}
                     </span>
                   </div>
 

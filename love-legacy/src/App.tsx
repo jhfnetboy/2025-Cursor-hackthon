@@ -20,6 +20,7 @@ export interface ScheduledItem {
   scheduledDate: Date;
   status: 'pending' | 'sent' | 'failed';
   createdAt: Date;
+  emailId?: string; // ID of the sent email (for tracking)
 }
 
 export interface MessageItem {

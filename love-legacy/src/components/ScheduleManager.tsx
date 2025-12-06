@@ -10,6 +10,7 @@ interface ScheduledItem {
   scheduledDate: Date;
   status: 'pending' | 'sent' | 'failed';
   createdAt: Date;
+  emailId?: string; // ID of the sent email (for tracking)
 }
 
 interface MessageItem {
@@ -59,15 +60,21 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({
   onUpdateScheduledItem,
   onDeleteScheduledItem,
 }) => {
-  const [selectedContent, setSelectedContent] = useState<{
+  const [selectedContents, setSelectedContents] = useState<Array<{
     id: string;
     type: 'message' | 'photo' | 'voice';
     title: string;
-  } | null>(null);
+  }>>([]);
   const [recipientEmail, setRecipientEmail] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [sendResult, setSendResult] = useState<{
+    success: boolean;
+    message: string;
+    emailId?: string;
+  } | null>(null);
 
   // Generate available content from props
   const availableContent = React.useMemo(() => [
@@ -91,15 +98,36 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({
     }))
   ], [messages, photos, voiceRecordings]);
 
-  const handleScheduleItem = (e?: React.FormEvent) => {
+  // Handle content selection toggle
+  const toggleContentSelection = (content: { id: string; type: 'message' | 'photo' | 'voice'; title: string }) => {
+    setSelectedContents(prev => {
+      const isSelected = prev.some(item => item.id === content.id);
+      if (isSelected) {
+        return prev.filter(item => item.id !== content.id);
+      } else if (prev.length < 3) { // Limit to 3 items
+        return [...prev, content];
+      } else {
+        alert('You can select up to 3 items for delivery.');
+        return prev;
+      }
+    });
+  };
+
+
+  const handleScheduleItem = async (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
     }
 
-    console.log('Schedule button clicked', { selectedContent, recipientEmail, scheduledDate, scheduledTime });
+    console.log('Schedule button clicked', { selectedContents, recipientEmail, scheduledDate, scheduledTime });
 
-    if (!selectedContent) {
-      alert('Please select content to send.');
+    if (selectedContents.length === 0) {
+      alert('Please select at least one content to send.');
+      return;
+    }
+
+    if (selectedContents.length > 3) {
+      alert('You can select up to 3 items for delivery.');
       return;
     }
 
@@ -128,29 +156,99 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({
       return;
     }
 
-    const newScheduledItem: ScheduledItem = {
-      id: Date.now().toString(),
-      contentId: selectedContent.id,
-      contentType: selectedContent.type,
-      title: selectedContent.title,
-      recipientEmail,
-      scheduledDate: scheduledDateTime,
-      status: 'pending',
-      createdAt: new Date()
-    };
+    setIsSending(true);
+    setSendResult(null);
 
-    console.log('Creating scheduled item:', newScheduledItem);
+    try {
+      // Generate share links for selected content
+      const contentLinks = selectedContents.map(content => {
+        const shareUrl = `${window.location.origin}/share/${content.type}/${content.id}`;
+        return {
+          type: content.type,
+          title: content.title,
+          url: shareUrl
+        };
+      });
 
-    setScheduledItems(prev => [...prev, newScheduledItem]);
+      // Send email via backend API
+      const response = await fetch('http://localhost:3000/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: recipientEmail,
+          subject: `Love's Legacy: ${selectedContents.length} precious message${selectedContents.length > 1 ? 's' : ''} from your loved one`,
+          contentLinks: contentLinks,
+          scheduledDate: scheduledDateTime.toISOString()
+        }),
+      });
 
-    // Reset form
-    setSelectedContent(null);
-    setRecipientEmail('');
-    setScheduledDate('');
-    setScheduledTime('');
-    setShowScheduleForm(false);
+      const result = await response.json();
 
-    alert('Content scheduled successfully! It will be sent at the specified time.');
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to send email');
+      }
+
+      // Create scheduled items for each selected content
+      selectedContents.forEach((content, index) => {
+        const newScheduledItem: ScheduledItem = {
+          id: `${result.email.id}-${index}`,
+          contentId: content.id,
+          contentType: content.type,
+          title: content.title,
+          recipientEmail,
+          scheduledDate: scheduledDateTime,
+          status: 'sent',
+          createdAt: new Date(),
+          emailId: result.email.id
+        };
+
+        console.log('Adding scheduled item:', newScheduledItem);
+        onAddScheduledItem(newScheduledItem);
+      });
+
+      setSendResult({
+        success: true,
+        message: `✉️ Email sent successfully! Your loved one will receive ${selectedContents.length} precious message${selectedContents.length > 1 ? 's' : ''} at the scheduled time.`,
+        emailId: result.email.id
+      });
+
+      // Reset form after successful send
+      setTimeout(() => {
+        setSelectedContents([]);
+        setRecipientEmail('');
+        setScheduledDate('');
+        setScheduledTime('');
+        setShowScheduleForm(false);
+        setSendResult(null);
+      }, 3000);
+
+    } catch (error) {
+      console.error('Email sending failed:', error);
+      setSendResult({
+        success: false,
+        message: `❌ Failed to send email: ${error.message}`
+      });
+
+      // Still create the scheduled items but mark as failed
+      selectedContents.forEach((content, index) => {
+        const newScheduledItem: ScheduledItem = {
+          id: `${Date.now()}-failed-${index}`,
+          contentId: content.id,
+          contentType: content.type,
+          title: content.title,
+          recipientEmail,
+          scheduledDate: scheduledDateTime,
+          status: 'failed',
+          createdAt: new Date()
+        };
+
+        onAddScheduledItem(newScheduledItem);
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleDeleteScheduled = (id: string) => {
@@ -223,34 +321,45 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({
 
             {/* Content Selection */}
             <div className="form-group">
-              <label>Select Content to Send</label>
+              <label>Select Content to Send (up to 3 items)</label>
               <div className="content-selector">
                 {availableContent.length === 0 ? (
                   <p className="no-content">No content available. Create some messages, photos, or voice recordings first.</p>
                 ) : (
                   <div className="content-list">
-                    {availableContent.map(content => (
-                      <div
-                        key={content.id}
-                        className={`content-item ${selectedContent?.id === content.id ? 'selected' : ''}`}
-                        onClick={() => setSelectedContent({
-                          id: content.id,
-                          type: content.type,
-                          title: content.title
-                        })}
-                      >
-                        <div className="content-icon">
-                          {getContentTypeIcon(content.type)}
+                    {availableContent.map(content => {
+                      const isSelected = selectedContents.some(item => item.id === content.id);
+                      return (
+                        <div
+                          key={content.id}
+                          className={`content-item ${isSelected ? 'selected' : ''}`}
+                          onClick={() => toggleContentSelection({
+                            id: content.id,
+                            type: content.type,
+                            title: content.title
+                          })}
+                        >
+                          <div className="content-checkbox">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {}} // Handled by onClick
+                              disabled={!isSelected && selectedContents.length >= 3}
+                            />
+                          </div>
+                          <div className="content-icon">
+                            {getContentTypeIcon(content.type)}
+                          </div>
+                          <div className="content-info">
+                            <div className="content-title">{content.title}</div>
+                            <div className="content-preview">{content.preview}</div>
+                          </div>
+                          {isSelected && (
+                            <div className="selected-indicator">✓</div>
+                          )}
                         </div>
-                        <div className="content-info">
-                          <div className="content-title">{content.title}</div>
-                          <div className="content-preview">{content.preview}</div>
-                        </div>
-                        {selectedContent?.id === content.id && (
-                          <div className="selected-indicator">✓</div>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -297,8 +406,8 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({
 
             {/* Form Validation Summary */}
             <div className="form-validation">
-              <div className="validation-item" style={{ color: selectedContent ? '#4CAF50' : '#F44336' }}>
-                {selectedContent ? '✓' : '✗'} Content selected: {selectedContent?.title || 'None'}
+              <div className="validation-item" style={{ color: selectedContents.length > 0 ? '#4CAF50' : '#F44336' }}>
+                {selectedContents.length > 0 ? '✓' : '✗'} Content selected: {selectedContents.length} item{selectedContents.length !== 1 ? 's' : ''} {selectedContents.length > 0 && `(max 3)`}
               </div>
               <div className="validation-item" style={{ color: recipientEmail ? '#4CAF50' : '#F44336' }}>
                 {recipientEmail ? '✓' : '✗'} Email: {recipientEmail || 'Not entered'}
@@ -308,22 +417,41 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({
               </div>
             </div>
 
+            {/* Send Status */}
+            {isSending && (
+              <div className="send-status sending">
+                <div className="status-icon">⏳</div>
+                <div className="status-text">Sending email...</div>
+              </div>
+            )}
+
+            {sendResult && (
+              <div className={`send-status ${sendResult.success ? 'success' : 'error'}`}>
+                <div className="status-icon">{sendResult.success ? '✅' : '❌'}</div>
+                <div className="status-text">{sendResult.message}</div>
+                {sendResult.emailId && (
+                  <div className="email-id">Email ID: {sendResult.emailId}</div>
+                )}
+              </div>
+            )}
+
             {/* Form Actions */}
             <div className="form-actions">
               <button
                 type="submit"
                 className="schedule-submit-btn"
-                disabled={!selectedContent || !recipientEmail || !scheduledDate || !scheduledTime}
-                title={!selectedContent || !recipientEmail || !scheduledDate || !scheduledTime ?
+                disabled={selectedContents.length === 0 || !recipientEmail || !scheduledDate || !scheduledTime || isSending}
+                title={selectedContents.length === 0 || !recipientEmail || !scheduledDate || !scheduledTime ?
                   "Please fill in all required fields: select content, enter email, and choose date/time" :
-                  "Schedule delivery of this content"}
+                  "Schedule delivery of selected content"}
               >
                 <Send size={18} />
-                Schedule Delivery
+                {isSending ? 'Sending...' : 'Schedule Delivery'}
               </button>
               <button
                 onClick={() => setShowScheduleForm(false)}
                 className="cancel-btn"
+                disabled={isSending}
               >
                 Cancel
               </button>
@@ -419,3 +547,133 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({
 };
 
 export default ScheduleManager;
+
+// Add styles for the multi-select content items
+const styles = `
+.content-item {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.content-item:hover {
+  border-color: #007bff;
+  box-shadow: 0 2px 4px rgba(0,123,255,0.1);
+}
+
+.content-item.selected {
+  border-color: #28a745;
+  background: #f8fff9;
+}
+
+.content-checkbox {
+  margin-right: 0.8rem;
+}
+
+.content-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #28a745;
+}
+
+.content-checkbox input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.content-icon {
+  margin-right: 0.8rem;
+  color: #666;
+}
+
+.content-info {
+  flex: 1;
+}
+
+.content-title {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 0.2rem;
+}
+
+.content-preview {
+  font-size: 0.85rem;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected-indicator {
+  color: #28a745;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.no-content {
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem;
+}
+
+.send-status {
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-weight: 500;
+}
+
+.send-status.sending {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+}
+
+.send-status.success {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.send-status.error {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.status-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.status-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.email-id {
+  font-size: 0.85rem;
+  color: inherit;
+  opacity: 0.8;
+  font-family: monospace;
+  margin-top: 0.5rem;
+}
+`;
+
+// Inject styles into the document head
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.type = 'text/css';
+  styleSheet.innerText = styles;
+  document.head.appendChild(styleSheet);
+}

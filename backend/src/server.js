@@ -172,9 +172,110 @@ app.use((error, req, res, next) => {
   });
 });
 
+// Fake email sending API endpoint
+app.post('/api/send-email', async (req, res) => {
+  try {
+    const { to, subject, contentLinks, scheduledDate } = req.body;
+
+    // Validate required fields
+    if (!to || !subject || !contentLinks || !scheduledDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields',
+        message: 'to, subject, contentLinks, and scheduledDate are required'
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(to)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid email format',
+        message: 'Please provide a valid email address'
+      });
+    }
+
+    // Simulate email sending delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+
+    // Generate a fake email ID
+    const emailId = `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Create fake email content
+    const emailContent = {
+      id: emailId,
+      to: to,
+      subject: subject,
+      contentLinks: contentLinks,
+      scheduledDate: scheduledDate,
+      status: 'sent',
+      sentAt: new Date().toISOString(),
+      messageId: `<${emailId}@loveslegacy.fake>`,
+      tracking: {
+        opened: false,
+        clicked: false,
+        delivered: true
+      }
+    };
+
+    console.log('📧 Fake email sent successfully:', {
+      id: emailId,
+      to: to,
+      subject: subject,
+      contentCount: contentLinks.length,
+      scheduledDate: scheduledDate
+    });
+
+    res.json({
+      success: true,
+      message: 'Email sent successfully (simulated)',
+      email: emailContent
+    });
+
+  } catch (error) {
+    console.error('Email sending error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Email sending failed',
+      message: error.message
+    });
+  }
+});
+
+// Get email status (fake implementation)
+app.get('/api/email-status/:emailId', async (req, res) => {
+  try {
+    const { emailId } = req.params;
+
+    // Simulate status check delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Return fake status
+    res.json({
+      success: true,
+      emailId: emailId,
+      status: 'delivered',
+      deliveredAt: new Date().toISOString(),
+      opened: Math.random() > 0.5,
+      clicked: Math.random() > 0.7
+    });
+
+  } catch (error) {
+    console.error('Email status check error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Status check failed',
+      message: error.message
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Love's Legacy Backend server running on http://localhost:${PORT}`);
   console.log(`💚 Health check: http://localhost:${PORT}/health`);
   console.log(`🎤 Speech-to-text: POST http://localhost:${PORT}/api/speech-to-text`);
+  console.log(`📧 Email sending: POST http://localhost:${PORT}/api/send-email`);
+  console.log(`📊 Email status: GET http://localhost:${PORT}/api/email-status/:emailId`);
   console.log(`📡 CORS enabled for frontend: http://localhost:5173`);
 });
