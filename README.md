@@ -118,6 +118,12 @@ pnpm lint
 
 ## ✨ 应用特色
 
+### 🏠 **单页面布局**
+- 所有功能集成在一个页面中
+- 无需切换标签页，操作更便捷
+- 响应式网格布局，适配不同屏幕尺寸
+- 紧凑设计，最大化信息展示
+
 ### 🔗 **分享功能**
 - 直接可访问的分享链接 (`/share/{type}/{id}`)
 - 无需账户即可查看内容
@@ -150,6 +156,8 @@ pnpm lint
 - 安排未来某个时刻的传递
 - 生成可直接访问的分享链接
 - 本地存储和管理调度任务
+- 表单验证和错误处理
+- *注意：当前为演示版本，邮件不会实际发送*
 
 ### 🎨 **温暖界面**
 - 充满爱和关怀的设计
@@ -173,15 +181,16 @@ pnpm lint
 
 ```
 loves-legacy/
-├── love-legacy/          # 主应用
+├── love-legacy/          # 主应用 (单页面布局)
 │   ├── src/
-│   │   ├── components/         # 爱心组件
-│   │   │   ├── MessageComposer.tsx  # 写信组件
-│   │   │   ├── PhotoManager.tsx     # 照片管理
-│   │   │   ├── VoiceRecorder.tsx    # 录音组件
-│   │   │   └── ScheduleManager.tsx  # 定时发送
-│   │   ├── App.tsx            # 主应用组件
-│   │   ├── App.css            # 应用样式
+│   │   ├── components/         # 功能组件
+│   │   │   ├── MessageComposer.tsx  # 💌 爱的信息
+│   │   │   ├── PhotoManager.tsx     # 📸 珍贵回忆
+│   │   │   ├── VoiceRecorder.tsx    # 🎤 心声录音
+│   │   │   └── ScheduleManager.tsx  # 📅 遗产传递
+│   │   ├── ShareView.tsx       # 🔗 分享页面
+│   │   ├── App.tsx            # 主应用 (单页面)
+│   │   ├── App.css            # 紧凑布局样式
 │   │   └── index.css          # 全局样式
 │   ├── public/
 │   │   └── heart-icon.svg     # 爱心图标

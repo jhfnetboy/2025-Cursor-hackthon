@@ -167,6 +167,10 @@
   padding: 0 1rem 2rem 1rem;
 }
 
+.main-content.compact {
+  padding: 1rem;
+}
+
 .content-area {
   max-width: 1200px;
   margin: 0 auto;
@@ -180,6 +184,165 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Features Grid Layout */
+.features-grid {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+.feature-section {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-header svg {
+  color: rgba(255, 255, 255, 0.8);
+  flex-shrink: 0;
+}
+
+.section-header h3 {
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0;
+  background: linear-gradient(45deg, #fff, #FFE5E5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-content {
+  padding: 0;
+}
+
+.section-content.compact {
+  /* Compact styling for single page layout */
+}
+
+.section-content.compact .composer-header,
+.section-content.compact .photo-header,
+.section-content.compact .voice-header,
+.section-content.compact .schedule-header {
+  display: none; /* Hide individual headers since we have section headers */
+}
+
+.section-content.compact .composer-content,
+.section-content.compact .photo-content,
+.section-content.compact .voice-content,
+.section-content.compact .schedule-content {
+  padding: 1.5rem 2rem;
+}
+
+.section-content.compact .message-form,
+.section-content.compact .upload-area,
+.section-content.compact .recording-controls,
+.section-content.compact .schedule-form {
+  margin: 0;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+  backdrop-filter: none;
+  padding: 0;
+}
+
+/* Compact adjustments for individual components */
+.section-content.compact .message-form {
+  padding: 0;
+}
+
+.section-content.compact .photos-section h3,
+.section-content.compact .recordings-section h3,
+.section-content.compact .scheduled-items h3 {
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+/* Adjust component sizing for compact layout */
+.section-content.compact .content-area {
+  min-height: auto;
+  padding: 1rem;
+}
+
+.section-content.compact .empty-state {
+  padding: 2rem 1rem;
+}
+
+.section-content.compact .component-placeholder {
+  padding: 1rem;
+  font-size: 1.1rem;
+}
+
+/* Form adjustments for compact layout */
+.section-content.compact .form-group {
+  margin-bottom: 1rem;
+}
+
+.section-content.compact .form-actions {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-content.compact .upload-area {
+  padding: 2rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-content.compact .recording-controls {
+  padding: 1.5rem 0;
+}
+
+.section-content.compact .schedule-form {
+  padding: 1.5rem 0;
+}
+
+/* Responsive Grid */
+@media (min-width: 1200px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+
+  .feature-section:nth-child(1),
+  .feature-section:nth-child(2) {
+    /* Top row - Love Letters and Cherished Moments */
+  }
+
+  .feature-section:nth-child(3),
+  .feature-section:nth-child(4) {
+    /* Bottom row - Heartfelt Voice and Legacy Delivery */
+  }
+}
+
+@media (min-width: 1800px) {
+  .features-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+
+  .feature-section {
+    /* All sections in one row on very wide screens */
+  }
 }
 
 .component-placeholder {
@@ -1508,6 +1671,28 @@
 .info-box li {
   margin-bottom: 0.5rem;
   line-height: 1.4;
+}
+
+/* Form Validation */
+.form-validation {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.validation-item {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.validation-item:last-child {
+  margin-bottom: 0;
 }
 
 /* Responsive Design */

@@ -11,7 +11,6 @@ import ScheduleManager from './components/ScheduleManager';
 import ShareView from './components/ShareView';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'messages' | 'photos' | 'voice' | 'schedule'>('messages');
   const [shareView, setShareView] = useState<{
     contentType: 'message' | 'photo' | 'voice';
     contentId: string;
@@ -31,27 +30,9 @@ function App() {
     }
   }, []);
 
-  const tabs = [
-    { id: 'messages', label: 'Love Letters', icon: MessageCircle, color: 'from-pink-400 to-rose-500' },
-    { id: 'photos', label: 'Cherished Moments', icon: Camera, color: 'from-orange-400 to-yellow-500' },
-    { id: 'voice', label: 'Heartfelt Voice', icon: Heart, color: 'from-red-400 to-pink-500' },
-    { id: 'schedule', label: 'Legacy Delivery', icon: Calendar, color: 'from-purple-400 to-indigo-500' },
-  ];
+  // No tabs needed - single page layout
 
-  const renderActiveComponent = () => {
-    switch (activeTab) {
-      case 'messages':
-        return <MessageComposer />;
-      case 'photos':
-        return <PhotoManager />;
-      case 'voice':
-        return <VoiceRecorder />;
-      case 'schedule':
-        return <ScheduleManager />;
-      default:
-        return <MessageComposer />;
-    }
-  };
+  // All components rendered in single page layout
 
   // If we're in share view, show the share component
   if (shareView) {
@@ -110,55 +91,83 @@ function App() {
             </motion.div>
             <div className="title-section">
               <h1 className="app-title">Love's Legacy</h1>
-              <p className="app-subtitle">A Legacy of Love and Cherished Memories</p>
+              <p className="app-subtitle">Create, Preserve & Share Your Love</p>
             </div>
           </div>
         </motion.header>
 
-        {/* Navigation */}
-        <motion.nav
-          className="nav-tabs"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          {tabs.map((tab, index) => (
-            <motion.button
-              key={tab.id}
-              className={`nav-tab ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id as any)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-            >
-              <tab.icon size={20} />
-              <span>{tab.label}</span>
-              <div className={`tab-indicator bg-gradient-to-r ${tab.color}`} />
-            </motion.button>
-          ))}
-        </motion.nav>
-
-        {/* Main Content */}
+        {/* Main Content - Single Page Layout */}
         <motion.main
-          className="main-content"
+          className="main-content compact"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          <AnimatePresence mode="wait">
+          <div className="features-grid">
+            {/* Love Letters Section */}
             <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.3 }}
-              className="content-area"
+              className="feature-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
             >
-              {renderActiveComponent()}
+              <div className="section-header">
+                <MessageCircle size={24} />
+                <h3>Love Letters</h3>
+              </div>
+              <div className="section-content compact">
+                <MessageComposer />
+              </div>
             </motion.div>
-          </AnimatePresence>
+
+            {/* Cherished Moments Section */}
+            <motion.div
+              className="feature-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <div className="section-header">
+                <Camera size={24} />
+                <h3>Cherished Moments</h3>
+              </div>
+              <div className="section-content compact">
+                <PhotoManager />
+              </div>
+            </motion.div>
+
+            {/* Heartfelt Voice Section */}
+            <motion.div
+              className="feature-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
+            >
+              <div className="section-header">
+                <Heart size={24} />
+                <h3>Heartfelt Voice</h3>
+              </div>
+              <div className="section-content compact">
+                <VoiceRecorder />
+              </div>
+            </motion.div>
+
+            {/* Legacy Delivery Section */}
+            <motion.div
+              className="feature-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            >
+              <div className="section-header">
+                <Calendar size={24} />
+                <h3>Legacy Delivery</h3>
+              </div>
+              <div className="section-content compact">
+                <ScheduleManager />
+              </div>
+            </motion.div>
+          </div>
         </motion.main>
 
         {/* Footer */}

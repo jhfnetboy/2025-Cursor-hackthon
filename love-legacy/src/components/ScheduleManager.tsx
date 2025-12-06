@@ -107,9 +107,25 @@ const ScheduleManager: React.FC = () => {
     localStorage.setItem('loves-legacy-scheduled', JSON.stringify(scheduledItems));
   }, [scheduledItems]);
 
-  const handleScheduleItem = () => {
-    if (!selectedContent || !recipientEmail || !scheduledDate || !scheduledTime) {
-      alert('Please fill in all required fields.');
+  const handleScheduleItem = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
+    console.log('Schedule button clicked', { selectedContent, recipientEmail, scheduledDate, scheduledTime });
+
+    if (!selectedContent) {
+      alert('Please select content to send.');
+      return;
+    }
+
+    if (!recipientEmail) {
+      alert('Please enter recipient email address.');
+      return;
+    }
+
+    if (!scheduledDate || !scheduledTime) {
+      alert('Please select delivery date and time.');
       return;
     }
 
@@ -138,6 +154,8 @@ const ScheduleManager: React.FC = () => {
       status: 'pending',
       createdAt: new Date()
     };
+
+    console.log('Creating scheduled item:', newScheduledItem);
 
     setScheduledItems(prev => [...prev, newScheduledItem]);
 
@@ -216,7 +234,7 @@ const ScheduleManager: React.FC = () => {
 
         {/* Schedule Form */}
         {showScheduleForm && (
-          <div className="schedule-form">
+          <form className="schedule-form" onSubmit={handleScheduleItem}>
             <h3>Schedule Content Delivery</h3>
 
             {/* Content Selection */}
@@ -293,12 +311,28 @@ const ScheduleManager: React.FC = () => {
               </div>
             </div>
 
+            {/* Form Validation Summary */}
+            <div className="form-validation">
+              <div className="validation-item" style={{ color: selectedContent ? '#4CAF50' : '#F44336' }}>
+                {selectedContent ? '✓' : '✗'} Content selected: {selectedContent?.title || 'None'}
+              </div>
+              <div className="validation-item" style={{ color: recipientEmail ? '#4CAF50' : '#F44336' }}>
+                {recipientEmail ? '✓' : '✗'} Email: {recipientEmail || 'Not entered'}
+              </div>
+              <div className="validation-item" style={{ color: (scheduledDate && scheduledTime) ? '#4CAF50' : '#F44336' }}>
+                {(scheduledDate && scheduledTime) ? '✓' : '✗'} Date/Time: {scheduledDate && scheduledTime ? `${scheduledDate} ${scheduledTime}` : 'Not set'}
+              </div>
+            </div>
+
             {/* Form Actions */}
             <div className="form-actions">
               <button
-                onClick={handleScheduleItem}
+                type="submit"
                 className="schedule-submit-btn"
                 disabled={!selectedContent || !recipientEmail || !scheduledDate || !scheduledTime}
+                title={!selectedContent || !recipientEmail || !scheduledDate || !scheduledTime ?
+                  "Please fill in all required fields: select content, enter email, and choose date/time" :
+                  "Schedule delivery of this content"}
               >
                 <Send size={18} />
                 Schedule Delivery
@@ -310,7 +344,7 @@ const ScheduleManager: React.FC = () => {
                 Cancel
               </button>
             </div>
-          </div>
+          </form>
         )}
 
         {/* Scheduled Items List */}
