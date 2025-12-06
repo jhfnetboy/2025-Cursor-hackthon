@@ -145,7 +145,7 @@ pnpm lint
 
 ```
 loves-legacy/
-├── leaving-world-app/          # 主应用
+├── love-legacy/          # 主应用
 │   ├── src/
 │   │   ├── components/         # 爱心组件
 │   │   │   ├── MessageComposer.tsx  # 写信组件

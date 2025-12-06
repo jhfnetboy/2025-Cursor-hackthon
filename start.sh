@@ -143,14 +143,14 @@ start_backend() {
 start_frontend() {
     print_header "Starting Love's Legacy Frontend (Port 5173)"
 
-    # Check if leaving-world-app directory exists
-    if [ ! -d "leaving-world-app" ]; then
-        print_error "Frontend directory (leaving-world-app) not found!"
+    # Check if love-legacy directory exists
+    if [ ! -d "love-legacy" ]; then
+        print_error "Frontend directory (love-legacy) not found!"
         exit 1
     fi
 
     # Navigate to frontend directory and start
-    cd leaving-world-app
+    cd love-legacy
 
     # Install dependencies if node_modules doesn't exist
     if [ ! -d "node_modules" ]; then

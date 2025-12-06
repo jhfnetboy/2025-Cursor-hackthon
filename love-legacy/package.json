@@ -1,11 +1,11 @@
 {
-  "name": "leaving-world-app",
+  "name": "love-legacy",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "A compassionate digital time capsule for leaving messages, photos, and memories for loved ones",
+  "description": "Love's Legacy - A compassionate digital time capsule for leaving messages, photos, and memories for loved ones",
   "scripts": {
-    "dev": "vite --port 5174",
+    "dev": "vite --port 5173",
     "build": "vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"

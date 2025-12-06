@@ -5,13 +5,13 @@
   "type": "module",
   "description": "Love's Legacy - A compassionate digital time capsule for leaving messages of love and hope",
   "scripts": {
-    "dev": "cd leaving-world-app && pnpm dev",
+    "dev": "cd love-legacy && pnpm dev",
     "dev:backend": "cd backend && pnpm dev",
     "dev:full": "concurrently \"pnpm dev:backend\" \"pnpm dev\"",
-    "build": "cd leaving-world-app && pnpm build",
-    "lint": "cd leaving-world-app && pnpm lint",
-    "preview": "cd leaving-world-app && pnpm preview",
-    "install:all": "pnpm install && cd backend && pnpm install && cd ../leaving-world-app && pnpm install"
+    "build": "cd love-legacy && pnpm build",
+    "lint": "cd love-legacy && pnpm lint",
+    "preview": "cd love-legacy && pnpm preview",
+    "install:all": "pnpm install && cd backend && pnpm install && cd ../love-legacy && pnpm install"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
