@@ -89,7 +89,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       console.error('Error starting recording:', error);
       alert('Could not access microphone. Please check your permissions.');
     }
-  }, [recordingTime, recordings.length]);
+  }, [recordingTime, voiceRecordings.length]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
@@ -268,11 +268,11 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         </div>
 
         {/* Recordings List */}
-        {recordings.length > 0 && (
+        {voiceRecordings.length > 0 && (
           <div className="recordings-section">
-            <h3>Your Voice Messages ({recordings.length})</h3>
+            <h3>Your Voice Messages ({voiceRecordings.length})</h3>
             <div className="recordings-list">
-              {recordings.map(recording => (
+              {voiceRecordings.map(recording => (
                 <div key={recording.id} className="recording-card">
                   <div className="recording-header">
                     <input
@@ -371,7 +371,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         )}
 
         {/* Empty State */}
-        {recordings.length === 0 && (
+        {voiceRecordings.length === 0 && (
           <div className="empty-state">
             <Mic size={64} />
             <h3>No Voice Messages Yet</h3>

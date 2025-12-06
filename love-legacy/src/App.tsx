@@ -64,81 +64,121 @@ function App() {
 
   // Load data from localStorage on mount
   useEffect(() => {
-    const storedMessages = localStorage.getItem('love-legacy-messages');
-    if (storedMessages) {
-      setMessages(JSON.parse(storedMessages));
-    }
+    try {
+      const storedMessages = localStorage.getItem('love-legacy-messages');
+      if (storedMessages) {
+        setMessages(JSON.parse(storedMessages));
+      }
 
-    const storedPhotos = localStorage.getItem('love-legacy-photos');
-    if (storedPhotos) {
-      setPhotos(JSON.parse(storedPhotos));
-    }
+      const storedPhotos = localStorage.getItem('love-legacy-photos');
+      if (storedPhotos) {
+        setPhotos(JSON.parse(storedPhotos));
+      }
 
-    const storedVoiceRecordings = localStorage.getItem('love-legacy-voice-recordings');
-    if (storedVoiceRecordings) {
-      setVoiceRecordings(JSON.parse(storedVoiceRecordings));
-    }
+      const storedVoiceRecordings = localStorage.getItem('love-legacy-voice-recordings');
+      if (storedVoiceRecordings) {
+        setVoiceRecordings(JSON.parse(storedVoiceRecordings));
+      }
 
-    const storedScheduledItems = localStorage.getItem('love-legacy-scheduled-items');
-    if (storedScheduledItems) {
-      const parsedItems = JSON.parse(storedScheduledItems).map((item: any) => ({
-        ...item,
-        scheduledDate: new Date(item.scheduledDate),
-        createdAt: new Date(item.createdAt),
-      }));
-      setScheduledItems(parsedItems);
+      const storedScheduledItems = localStorage.getItem('love-legacy-scheduled-items');
+      if (storedScheduledItems) {
+        const parsedItems = JSON.parse(storedScheduledItems).map((item: any) => ({
+          ...item,
+          scheduledDate: new Date(item.scheduledDate),
+          createdAt: new Date(item.createdAt),
+        }));
+        setScheduledItems(parsedItems);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
     }
   }, []);
 
   // Check for share URL on mount
   useEffect(() => {
-    const path = window.location.pathname;
-    const shareMatch = path.match(/^\/share\/(message|photo|voice)\/(.+)$/);
+    try {
+      const path = window.location.pathname;
+      const shareMatch = path.match(/^\/share\/(message|photo|voice)\/(.+)$/);
 
-    if (shareMatch) {
-      const [, contentType, contentId] = shareMatch;
-      setShareView({
-        contentType: contentType as 'message' | 'photo' | 'voice',
-        contentId
-      });
+      if (shareMatch) {
+        const [, contentType, contentId] = shareMatch;
+        setShareView({
+          contentType: contentType as 'message' | 'photo' | 'voice',
+          contentId
+        });
+      }
+    } catch (error) {
+      console.error('Error checking share URL:', error);
     }
   }, []);
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('love-legacy-messages', JSON.stringify(messages));
+    try {
+      localStorage.setItem('love-legacy-messages', JSON.stringify(messages));
+    } catch (error) {
+      console.error('Error saving messages:', error);
+    }
   }, [messages]);
 
   useEffect(() => {
-    localStorage.setItem('love-legacy-photos', JSON.stringify(photos));
+    try {
+      localStorage.setItem('love-legacy-photos', JSON.stringify(photos));
+    } catch (error) {
+      console.error('Error saving photos:', error);
+    }
   }, [photos]);
 
   useEffect(() => {
-    localStorage.setItem('love-legacy-voice-recordings', JSON.stringify(voiceRecordings));
+    try {
+      localStorage.setItem('love-legacy-voice-recordings', JSON.stringify(voiceRecordings));
+    } catch (error) {
+      console.error('Error saving voice recordings:', error);
+    }
   }, [voiceRecordings]);
 
   useEffect(() => {
-    localStorage.setItem('love-legacy-scheduled-items', JSON.stringify(scheduledItems));
+    try {
+      localStorage.setItem('love-legacy-scheduled-items', JSON.stringify(scheduledItems));
+    } catch (error) {
+      console.error('Error saving scheduled items:', error);
+    }
   }, [scheduledItems]);
 
   // Callback functions for scheduled items
   const handleAddScheduledItem = (item: ScheduledItem) => {
+    console.log('Adding scheduled item:', item);
     setScheduledItems(prev => [...prev, item]);
   };
 
   const handleUpdateScheduledItem = (item: ScheduledItem) => {
+    console.log('Updating scheduled item:', item);
     setScheduledItems(prev => prev.map(scheduledItem =>
       scheduledItem.id === item.id ? item : scheduledItem
     ));
   };
 
   const handleDeleteScheduledItem = (id: string) => {
+    console.log('Deleting scheduled item:', id);
     setScheduledItems(prev => prev.filter(item => item.id !== id));
   };
 
   // No tabs needed - single page layout
 
   // All components rendered in single page layout
+
+  // If we're in share view, show the share component
+  if (shareView) {
+    console.log('Rendering share view');
+    return (
+      <div className="app">
+        <ShareView
+          contentType={shareView.contentType}
+          contentId={shareView.contentId}
+        />
+      </div>
+    );
+  }
 
   // If we're in share view, show the share component
   if (shareView) {
@@ -152,34 +192,35 @@ function App() {
     );
   }
 
-  return (
-    <div className="app">
-      {/* Floating background shapes */}
-      <div className="floating-shapes">
-        {[...Array(8)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="floating-shape"
-            animate={{
-              x: [0, Math.random() * 100 - 50, 0],
-              y: [0, Math.random() * 100 - 50, 0],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: 8 + Math.random() * 4,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-            }}
-          />
-        ))}
-      </div>
+  try {
+    return (
+      <div className="app">
+        {/* Floating background shapes */}
+        <div className="floating-shapes">
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="floating-shape"
+              animate={{
+                x: [0, Math.random() * 100 - 50, 0],
+                y: [0, Math.random() * 100 - 50, 0],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 8 + Math.random() * 4,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            />
+          ))}
+        </div>
 
-      <div className="app-container">
+        <div className="app-container">
         {/* Header */}
         <motion.header
           className="app-header"
@@ -320,6 +361,23 @@ function App() {
       </div>
     </div>
   );
+  } catch (error) {
+    console.error('❌ App: Error during render:', error);
+    // Fallback render for errors
+    return (
+      <div style={{
+        padding: '20px',
+        background: 'red',
+        color: 'white',
+        minHeight: '100vh',
+        fontSize: '18px'
+      }}>
+        <h1>❌ App Error</h1>
+        <p>Error: {error?.message || 'Unknown error'}</p>
+        <pre>{error?.stack || 'No stack trace'}</pre>
+      </div>
+    );
+  }
 }
 
 export default App;

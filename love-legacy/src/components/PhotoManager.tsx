@@ -39,22 +39,43 @@ const PhotoManager: React.FC<PhotoManagerProps> = ({
   }, []);
 
   const processFiles = useCallback((files: FileList) => {
+    console.log('Processing files:', files.length, 'files');
     Array.from(files).forEach(file => {
+      console.log('Processing file:', file.name, file.size, file.type);
       if (file.type.startsWith('image/')) {
+        // Check file size (limit to 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          alert(`File "${file.name}" is too large. Please select files smaller than 10MB.`);
+          return;
+        }
+
         const reader = new FileReader();
         reader.onload = (e) => {
-          const url = e.target?.result as string;
-          const newPhoto: PhotoItem = {
-            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-            url,
-            title: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
-            description: '',
-            fileSize: file.size,
-            createdAt: new Date().toISOString()
-          };
-          onAddPhoto(newPhoto);
+          try {
+            const url = e.target?.result as string;
+            console.log('File loaded successfully, URL length:', url.length);
+            const newPhoto: PhotoItem = {
+              id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+              url,
+              title: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
+              description: '',
+              fileSize: file.size,
+              createdAt: new Date().toISOString()
+            };
+            console.log('Adding photo:', newPhoto.title);
+            onAddPhoto(newPhoto);
+          } catch (error) {
+            console.error('Error processing file:', error);
+            alert('Error processing image file. Please try again.');
+          }
+        };
+        reader.onerror = (error) => {
+          console.error('FileReader error:', error);
+          alert('Error reading file. Please try again.');
         };
         reader.readAsDataURL(file);
+      } else {
+        console.warn('Skipping non-image file:', file.name, file.type);
       }
     });
   }, [onAddPhoto]);
@@ -207,9 +228,9 @@ const PhotoManager: React.FC<PhotoManagerProps> = ({
                       rows={2}
                     />
                     <div className="photo-meta">
-                      <span className="photo-date">{formatDate(photo.uploadedAt)}</span>
+                      <span className="photo-date">{formatDate(new Date(photo.createdAt))}</span>
                       <span className="photo-size">
-                        {(photo.file.size / 1024 / 1024).toFixed(1)} MB
+                        {(photo.fileSize / 1024 / 1024).toFixed(1)} MB
                       </span>
                     </div>
                   </div>
@@ -252,8 +273,8 @@ const PhotoManager: React.FC<PhotoManagerProps> = ({
                 <p className="modal-description">{selectedPhoto.description}</p>
               )}
               <div className="modal-meta">
-                <span>Uploaded: {formatDate(selectedPhoto.uploadedAt)}</span>
-                <span>Size: {(selectedPhoto.file.size / 1024 / 1024).toFixed(1)} MB</span>
+                <span>Uploaded: {formatDate(new Date(selectedPhoto.createdAt))}</span>
+                <span>Size: {(selectedPhoto.fileSize / 1024 / 1024).toFixed(1)} MB</span>
               </div>
             </div>
           </div>
