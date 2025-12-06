@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
         const transcription = await elevenlabsClient.speechToText.convert({
           audio: audioBuffer,
-          model_id: 'eleven_multilingual_v2',
+          model_id: 'scribe_v1',
           tag_audio_events: true,
           language_code: 'en',
           timestamps_granularity: 'word'

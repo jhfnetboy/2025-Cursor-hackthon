@@ -10,14 +10,5 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    rollupOptions: {
-      input: {
-        main: 'index.html',
-        // Add entry points for share pages
-        shareMessage: 'src/share/message/index.html',
-        shareVoice: 'src/share/voice/index.html',
-        sharePhoto: 'src/share/photo/index.html',
-      },
-    },
   },
 })
