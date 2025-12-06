@@ -19,6 +19,24 @@ Love's Legacy is dedicated to providing a warm, safe digital space for people wh
 - Node.js >= 18.0.0
 - pnpm >= 8.0.0
 
+### Deployment Options
+
+#### 🌐 **Vercel (Recommended)**
+For easy deployment with global CDN:
+
+```bash
+# Quick deploy to Vercel
+./deploy-vercel.sh
+
+# Or manually:
+cd love-legacy
+vercel --prod
+```
+
+See [Vercel Deployment Guide](love-legacy/VERCEL_DEPLOY.md) for details.
+
+#### 🖥️ **Local Development**
+
 ### Launch Application
 
 ```bash
@@ -274,6 +292,24 @@ Love's Legacy 致力于为那些希望在离开时留下爱和回忆的人们提
 ### 环境要求
 - Node.js >= 18.0.0
 - pnpm >= 8.0.0
+
+### 部署选项
+
+#### 🌐 **Vercel 部署（推荐）**
+享受全球 CDN 和自动部署：
+
+```bash
+# 快速部署到 Vercel
+./deploy-vercel.sh
+
+# 或手动部署：
+cd love-legacy
+vercel --prod
+```
+
+详见 [Vercel 部署指南](love-legacy/VERCEL_DEPLOY.md)。
+
+#### 🖥️ **本地开发**
 
 ### 启动应用
 

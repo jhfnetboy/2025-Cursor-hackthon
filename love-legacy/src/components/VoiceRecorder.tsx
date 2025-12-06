@@ -108,12 +108,18 @@ const VoiceRecorder: React.FC = () => {
 
   const transcribeAudio = async (recordingId: string, audioBlob: Blob) => {
     try {
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
+      // Convert blob to base64 for Vercel Functions
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-      const response = await fetch('http://localhost:3000/api/speech-to-text', {
+      const response = await fetch('/api/speech-to-text', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          audio: base64Audio,
+        }),
       });
 
       const result = await response.json();

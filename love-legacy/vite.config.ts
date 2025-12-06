@@ -9,6 +9,15 @@ export default defineConfig({
     open: true
   },
   build: {
-    outDir: 'dist'
-  }
+    outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        // Add entry points for share pages
+        shareMessage: 'src/share/message/index.html',
+        shareVoice: 'src/share/voice/index.html',
+        sharePhoto: 'src/share/photo/index.html',
+      },
+    },
+  },
 })
