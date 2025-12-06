@@ -332,8 +332,10 @@ const VoiceRecorder: React.FC = () => {
                         {recording.transcriptionError && recording.transcription && (
                           <div className="mock-notice">
                             <small>
-                              📝 Using sample transcription. To enable real AI transcription,
-                              upgrade your ElevenLabs account to include speech-to-text permissions.
+                              💡 Need real transcription?<br/>
+                              Visit <a href="https://elevenlabs.io/app/profile" target="_blank" rel="noopener noreferrer" style={{color: 'var(--primary-pink)'}}>
+                                ElevenLabs Profile
+                              </a> and upgrade to Creator plan ($22/month).
                             </small>
                           </div>
                         )}

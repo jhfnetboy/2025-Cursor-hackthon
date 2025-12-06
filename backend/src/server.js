@@ -123,11 +123,16 @@ app.post('/api/speech-to-text', upload.single('audio'), async (req, res) => {
     // Handle specific ElevenLabs errors
     if (error.statusCode === 401) {
       if (error.body?.detail?.status === 'missing_permissions') {
-        errorMessage = 'Speech-to-text API access required. Using mock transcription for development.';
+        errorMessage = 'Speech-to-text permission required. Please upgrade to Creator plan ($22/month) and regenerate API key.';
         mockTranscription = generateMockTranscription();
-        console.log('🔄 Using mock transcription due to missing API permissions');
+        console.log('🔄 Using mock transcription - speech-to-text permission missing');
+        console.log('💡 To enable real transcription:');
+        console.log('   1. Go to https://elevenlabs.io/app/profile');
+        console.log('   2. Upgrade to Creator plan ($22/month)');
+        console.log('   3. Generate a new API key');
+        console.log('   4. Update backend/.env with the new key');
       } else if (error.body?.detail?.status === 'invalid_api_key') {
-        errorMessage = 'Invalid ElevenLabs API key. Please check your backend/.env file.';
+        errorMessage = 'Invalid ElevenLabs API key. Please check your backend/.env file and ensure the key is correct.';
       } else {
         errorMessage = `ElevenLabs API authentication error: ${error.body?.detail?.message || error.message}`;
       }
