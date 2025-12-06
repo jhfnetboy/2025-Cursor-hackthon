@@ -1,43 +1,32 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Upload, Image, X, Heart, Camera, Trash2, Eye } from 'lucide-react';
 
-interface Photo {
+interface PhotoItem {
   id: string;
-  file: File;
-  url: string;
   title: string;
-  description: string;
-  uploadedAt: Date;
+  description?: string;
+  url: string; // Base64 encoded image
+  fileSize: number;
+  createdAt: string;
 }
 
-const PhotoManager: React.FC = () => {
-  const [photos, setPhotos] = useState<Photo[]>([]);
+interface PhotoManagerProps {
+  photos: PhotoItem[];
+  onAddPhoto: (photo: PhotoItem) => void;
+  onUpdatePhoto: (photo: PhotoItem) => void;
+  onDeletePhoto: (id: string) => void;
+}
+
+const PhotoManager: React.FC<PhotoManagerProps> = ({
+  photos,
+  onAddPhoto,
+  onUpdatePhoto,
+  onDeletePhoto,
+}) => {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<PhotoItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Load photos from localStorage on component mount
-  React.useEffect(() => {
-    const savedPhotos = localStorage.getItem('loves-legacy-photos');
-    if (savedPhotos) {
-      try {
-        const parsed = JSON.parse(savedPhotos);
-        // Convert back to Photo objects with File objects (this will fail, so we'll just show empty for now)
-        // In a real app, you'd need to store the actual files or use a proper storage solution
-        setPhotos([]);
-      } catch (error) {
-        console.error('Failed to load saved photos:', error);
-      }
-    }
-  }, []);
-
-  // Save photos to localStorage whenever photos change
-  React.useEffect(() => {
-    // We can't actually save File objects to localStorage
-    // In a real implementation, you'd upload to a server or use IndexedDB
-    // For now, we'll just keep them in memory
-  }, [photos]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -55,20 +44,20 @@ const PhotoManager: React.FC = () => {
         const reader = new FileReader();
         reader.onload = (e) => {
           const url = e.target?.result as string;
-          const newPhoto: Photo = {
+          const newPhoto: PhotoItem = {
             id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-            file,
             url,
             title: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
             description: '',
-            uploadedAt: new Date()
+            fileSize: file.size,
+            createdAt: new Date().toISOString()
           };
-          setPhotos(prev => [...prev, newPhoto]);
+          onAddPhoto(newPhoto);
         };
         reader.readAsDataURL(file);
       }
     });
-  }, []);
+  }, [onAddPhoto]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -93,9 +82,9 @@ const PhotoManager: React.FC = () => {
 
   const handleDeletePhoto = useCallback((id: string) => {
     if (window.confirm('Are you sure you want to delete this photo? This action cannot be undone.')) {
-      setPhotos(prev => prev.filter(photo => photo.id !== id));
+      onDeletePhoto(id);
     }
-  }, []);
+  }, [onDeletePhoto]);
 
   const handleViewPhoto = useCallback((photo: Photo) => {
     setSelectedPhoto(photo);
@@ -108,10 +97,15 @@ const PhotoManager: React.FC = () => {
   }, []);
 
   const updatePhotoDetails = useCallback((id: string, field: 'title' | 'description', value: string) => {
-    setPhotos(prev => prev.map(photo =>
-      photo.id === id ? { ...photo, [field]: value } : photo
-    ));
-  }, []);
+    const photo = photos.find(p => p.id === id);
+    if (photo) {
+      const updatedPhoto: PhotoItem = {
+        ...photo,
+        [field]: value
+      };
+      onUpdatePhoto(updatedPhoto);
+    }
+  }, [photos, onUpdatePhoto]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {

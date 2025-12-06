@@ -12,8 +12,53 @@ interface ScheduledItem {
   createdAt: Date;
 }
 
-const ScheduleManager: React.FC = () => {
-  const [scheduledItems, setScheduledItems] = useState<ScheduledItem[]>([]);
+interface MessageItem {
+  id: string;
+  title: string;
+  content: string;
+  recipient?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PhotoItem {
+  id: string;
+  title: string;
+  description?: string;
+  url: string; // Base64 encoded image
+  fileSize: number;
+  createdAt: string;
+}
+
+interface VoiceRecording {
+  id: string;
+  title: string;
+  audioUrl: string; // Blob URL or base64
+  transcription: string;
+  transcriptionError?: boolean;
+  apiUsed?: string;
+  createdAt: string;
+}
+
+interface ScheduleManagerProps {
+  messages: MessageItem[];
+  photos: PhotoItem[];
+  voiceRecordings: VoiceRecording[];
+  scheduledItems: ScheduledItem[];
+  onAddScheduledItem: (item: ScheduledItem) => void;
+  onUpdateScheduledItem: (item: ScheduledItem) => void;
+  onDeleteScheduledItem: (id: string) => void;
+}
+
+const ScheduleManager: React.FC<ScheduleManagerProps> = ({
+  messages,
+  photos,
+  voiceRecordings,
+  scheduledItems,
+  onAddScheduledItem,
+  onUpdateScheduledItem,
+  onDeleteScheduledItem,
+}) => {
   const [selectedContent, setSelectedContent] = useState<{
     id: string;
     type: 'message' | 'photo' | 'voice';
@@ -23,89 +68,28 @@ const ScheduleManager: React.FC = () => {
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   const [showScheduleForm, setShowScheduleForm] = useState(false);
-  const [availableContent, setAvailableContent] = useState<Array<{
-    id: string;
-    type: 'message' | 'photo' | 'voice';
-    title: string;
-    preview: string;
-  }>>([]);
 
-  // Load scheduled items and available content on mount
-  useEffect(() => {
-    // Load scheduled items
-    const savedScheduled = localStorage.getItem('loves-legacy-scheduled');
-    if (savedScheduled) {
-      try {
-        const parsed = JSON.parse(savedScheduled);
-        const itemsWithDates = parsed.map((item: any) => ({
-          ...item,
-          scheduledDate: new Date(item.scheduledDate),
-          createdAt: new Date(item.createdAt)
-        }));
-        setScheduledItems(itemsWithDates);
-      } catch (error) {
-        console.error('Failed to load scheduled items:', error);
-      }
-    }
-
-    // Load available content from other components
-    loadAvailableContent();
-  }, []);
-
-  const loadAvailableContent = () => {
-    const content: Array<{
-      id: string;
-      type: 'message' | 'photo' | 'voice';
-      title: string;
-      preview: string;
-    }> = [];
-
-    // Load messages
-    const messages = localStorage.getItem('loves-legacy-messages');
-    if (messages) {
-      try {
-        const parsedMessages = JSON.parse(messages);
-        parsedMessages.forEach((msg: any) => {
-          content.push({
-            id: msg.id,
-            type: 'message',
-            title: msg.title,
-            preview: msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : '')
-          });
-        });
-      } catch (error) {
-        console.error('Failed to load messages:', error);
-      }
-    }
-
-    // Load voice recordings
-    const recordings = localStorage.getItem('loves-legacy-voice-recordings');
-    if (recordings) {
-      try {
-        const parsedRecordings = JSON.parse(recordings);
-        parsedRecordings.forEach((rec: any) => {
-          content.push({
-            id: rec.id,
-            type: 'voice',
-            title: rec.title,
-            preview: rec.transcription ? rec.transcription.substring(0, 100) + '...' : 'Voice recording'
-          });
-        });
-      } catch (error) {
-        console.error('Failed to load recordings:', error);
-      }
-    }
-
-    // For photos, we'd need to store photo metadata, but for now we'll skip
-    // In a real implementation, you'd store photo titles/descriptions
-
-    setAvailableContent(content);
-  };
-
-  // Save scheduled items whenever they change
-  useEffect(() => {
-    localStorage.setItem('loves-legacy-scheduled', JSON.stringify(scheduledItems));
-  }, [scheduledItems]);
+  // Generate available content from props
+  const availableContent = React.useMemo(() => [
+    ...messages.map(msg => ({
+      id: msg.id,
+      type: 'message' as const,
+      title: msg.title,
+      preview: msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : '')
+    })),
+    ...photos.map(photo => ({
+      id: photo.id,
+      type: 'photo' as const,
+      title: photo.title,
+      preview: photo.description || 'Photo'
+    })),
+    ...voiceRecordings.map(voice => ({
+      id: voice.id,
+      type: 'voice' as const,
+      title: voice.title,
+      preview: voice.transcription.substring(0, 100) + (voice.transcription.length > 100 ? '...' : '')
+    }))
+  ], [messages, photos, voiceRecordings]);
 
   const handleScheduleItem = (e?: React.FormEvent) => {
     if (e) {

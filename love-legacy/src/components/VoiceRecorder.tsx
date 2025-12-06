@@ -1,20 +1,29 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Mic, MicOff, Play, Pause, Square, Trash2, Heart, Volume2, Clock } from 'lucide-react';
 
 interface VoiceRecording {
   id: string;
-  blob: Blob;
-  url: string;
-  duration: number;
-  recordedAt: Date;
   title: string;
-  transcription?: string;
-  isTranscribing?: boolean;
-  transcriptionError?: string;
+  audioUrl: string; // Blob URL or base64
+  transcription: string;
+  transcriptionError?: boolean;
+  apiUsed?: string;
+  createdAt: string;
 }
 
-const VoiceRecorder: React.FC = () => {
-  const [recordings, setRecordings] = useState<VoiceRecording[]>([]);
+interface VoiceRecorderProps {
+  voiceRecordings: VoiceRecording[];
+  onAddVoiceRecording: (recording: VoiceRecording) => void;
+  onUpdateVoiceRecording: (recording: VoiceRecording) => void;
+  onDeleteVoiceRecording: (id: string) => void;
+}
+
+const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
+  voiceRecordings,
+  onAddVoiceRecording,
+  onUpdateVoiceRecording,
+  onDeleteVoiceRecording,
+}) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
@@ -24,20 +33,6 @@ const VoiceRecorder: React.FC = () => {
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Load recordings from localStorage on component mount
-  useEffect(() => {
-    const savedRecordings = localStorage.getItem('loves-legacy-voice-recordings');
-    if (savedRecordings) {
-      try {
-        // Note: We can't restore Blob objects from localStorage
-        // In a real app, you'd store files on a server
-        setRecordings([]);
-      } catch (error) {
-        console.error('Failed to load saved recordings:', error);
-      }
-    }
-  }, []);
 
   const startRecording = useCallback(async () => {
     try {
@@ -58,19 +53,16 @@ const VoiceRecorder: React.FC = () => {
       mediaRecorder.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(blob);
-        const duration = recordingTime;
 
         const newRecording: VoiceRecording = {
           id: Date.now().toString(),
-          blob,
-          url,
-          duration,
-          recordedAt: new Date(),
-          title: `Voice Message ${recordings.length + 1}`,
-          isTranscribing: true
+          audioUrl: url,
+          title: `Voice Message ${voiceRecordings.length + 1}`,
+          transcription: '',
+          createdAt: new Date().toISOString()
         };
 
-        setRecordings(prev => [...prev, newRecording]);
+        onAddVoiceRecording(newRecording);
 
         // Stop all tracks to release microphone
         stream.getTracks().forEach(track => track.stop());
@@ -128,16 +120,16 @@ const VoiceRecorder: React.FC = () => {
         throw new Error(result.error || `Transcription failed: ${response.status}`);
       }
 
-      setRecordings(prev => prev.map(recording =>
-        recording.id === recordingId
-          ? {
-              ...recording,
-              transcription: result.transcription,
-              isTranscribing: false,
-              transcriptionError: result.error || null
-            }
-          : recording
-      ));
+      const recording = voiceRecordings.find(r => r.id === recordingId);
+      if (recording) {
+        const updatedRecording: VoiceRecording = {
+          ...recording,
+          transcription: result.transcription,
+          transcriptionError: result.transcriptionError,
+          apiUsed: result.apiUsed
+        };
+        onUpdateVoiceRecording(updatedRecording);
+      }
 
     } catch (error) {
       console.error('Transcription error:', error);
@@ -186,7 +178,7 @@ const VoiceRecorder: React.FC = () => {
 
   const deleteRecording = useCallback((id: string) => {
     if (window.confirm('Are you sure you want to delete this voice recording? This action cannot be undone.')) {
-      setRecordings(prev => prev.filter(recording => recording.id !== id));
+      onDeleteVoiceRecording(id);
 
       // Stop playback if this recording is playing
       if (currentlyPlaying === id && audioRef.current) {
@@ -195,13 +187,18 @@ const VoiceRecorder: React.FC = () => {
         setCurrentlyPlaying(null);
       }
     }
-  }, [currentlyPlaying]);
+  }, [currentlyPlaying, onDeleteVoiceRecording]);
 
   const updateRecordingTitle = useCallback((id: string, title: string) => {
-    setRecordings(prev => prev.map(recording =>
-      recording.id === id ? { ...recording, title } : recording
-    ));
-  }, []);
+    const recording = voiceRecordings.find(r => r.id === id);
+    if (recording) {
+      const updatedRecording: VoiceRecording = {
+        ...recording,
+        title
+      };
+      onUpdateVoiceRecording(updatedRecording);
+    }
+  }, [voiceRecordings, onUpdateVoiceRecording]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

@@ -1,18 +1,29 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Save, Heart, Edit3, Trash2, Send, MessageSquare } from 'lucide-react';
 
-interface Message {
+interface MessageItem {
   id: string;
   title: string;
   content: string;
-  recipient: string;
-  createdAt: Date;
-  updatedAt: Date;
+  recipient?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const MessageComposer: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [currentMessage, setCurrentMessage] = useState<Partial<Message>>({
+interface MessageComposerProps {
+  messages: MessageItem[];
+  onAddMessage: (message: MessageItem) => void;
+  onUpdateMessage: (message: MessageItem) => void;
+  onDeleteMessage: (id: string) => void;
+}
+
+const MessageComposer: React.FC<MessageComposerProps> = ({
+  messages,
+  onAddMessage,
+  onUpdateMessage,
+  onDeleteMessage,
+}) => {
+  const [currentMessage, setCurrentMessage] = useState<Partial<MessageItem>>({
     title: '',
     content: '',
     recipient: ''
@@ -23,49 +34,32 @@ const MessageComposer: React.FC = () => {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load messages from localStorage on component mount
-  useEffect(() => {
-    const savedMessages = localStorage.getItem('loves-legacy-messages');
-    if (savedMessages) {
-      try {
-        const parsed = JSON.parse(savedMessages);
-        const messagesWithDates = parsed.map((msg: any) => ({
-          ...msg,
-          createdAt: new Date(msg.createdAt),
-          updatedAt: new Date(msg.updatedAt)
-        }));
-        setMessages(messagesWithDates);
-      } catch (error) {
-        console.error('Failed to load saved messages:', error);
-      }
-    }
-  }, []);
-
-  // Save messages to localStorage whenever messages change
-  useEffect(() => {
-    localStorage.setItem('loves-legacy-messages', JSON.stringify(messages));
-  }, [messages]);
-
   const handleSaveMessage = () => {
     if (!currentMessage.title?.trim() || !currentMessage.content?.trim()) {
       alert('Please fill in both title and message content.');
       return;
     }
 
-    const now = new Date();
+    const now = new Date().toISOString();
 
     if (isEditing && editingId) {
       // Update existing message
-      setMessages(prev => prev.map(msg =>
-        msg.id === editingId
-          ? { ...msg, ...currentMessage, updatedAt: now }
-          : msg
-      ));
+      const existingMessage = messages.find(msg => msg.id === editingId);
+      if (existingMessage) {
+        const updatedMessage: MessageItem = {
+          ...existingMessage,
+          title: currentMessage.title || existingMessage.title,
+          content: currentMessage.content || existingMessage.content,
+          recipient: currentMessage.recipient || existingMessage.recipient,
+          updatedAt: now
+        };
+        onUpdateMessage(updatedMessage);
+      }
       setIsEditing(false);
       setEditingId(null);
     } else {
       // Create new message
-      const newMessage: Message = {
+      const newMessage: MessageItem = {
         id: Date.now().toString(),
         title: currentMessage.title,
         content: currentMessage.content,
@@ -73,7 +67,7 @@ const MessageComposer: React.FC = () => {
         createdAt: now,
         updatedAt: now
       };
-      setMessages(prev => [...prev, newMessage]);
+      onAddMessage(newMessage);
     }
 
     // Reset form
@@ -99,7 +93,7 @@ const MessageComposer: React.FC = () => {
 
   const handleDeleteMessage = (id: string) => {
     if (window.confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
-      setMessages(prev => prev.filter(msg => msg.id !== id));
+      onDeleteMessage(id);
 
       // If we're editing this message, reset the form
       if (editingId === id) {
