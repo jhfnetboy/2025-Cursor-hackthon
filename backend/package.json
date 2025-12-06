@@ -1,27 +1,21 @@
 {
-  "name": "ai-music-generator-backend",
+  "name": "loves-legacy-backend",
   "version": "1.0.0",
-  "description": "Backend service for AI Music Generator with secure API key handling",
+  "description": "Backend for Love's Legacy - ElevenLabs Speech-to-Text API integration",
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
     "dev": "node --watch --env-file=.env src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/server.js"
   },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "@elevenlabs/elevenlabs-js": "^2.26.0",
-    "dotenv": "^16.3.1"
-  },
-  "keywords": [
-    "ai",
-    "music",
-    "generator",
-    "elevenlabs",
-    "backend"
-  ],
+  "keywords": [],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.26.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "multer": "^1.4.5-lts.1"
+  }
 }

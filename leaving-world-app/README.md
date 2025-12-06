@@ -1,6 +1,6 @@
-# 🌹 Leaving the World with Love and Happiness
+# 💖 Love's Legacy
 
-A compassionate digital time capsule application for people who wish to leave behind messages of love, cherished memories, and heartfelt voice recordings for their loved ones.
+A compassionate digital legacy application for preserving messages of love, cherished memories, and heartfelt voice recordings for loved ones and future generations.
 
 ## ✨ Features
 
@@ -25,13 +25,13 @@ pnpm dev
 
 ## 🎯 Purpose
 
-This application was created with deep compassion for individuals facing terminal illness who wish to:
+Love's Legacy was created with deep compassion for those who wish to preserve their love, wisdom, and cherished memories for future generations:
 
-- Leave behind messages of love and encouragement
-- Share precious memories and life lessons
-- Record voice messages that capture their personality
-- Schedule future deliveries for important life moments
-- Create a lasting digital legacy of love
+- **💌 Love Letters**: Write heartfelt messages that will be cherished forever
+- **📸 Cherished Moments**: Preserve precious memories and life experiences
+- **🎤 Heartfelt Voice**: Record voice messages that capture your unique personality
+- **📅 Legacy Delivery**: Schedule messages for important future moments
+- **❤️ Eternal Love**: Create a lasting digital legacy of love and hope
 
 ## 🛠️ Technology Stack
 

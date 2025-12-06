@@ -1,127 +1,115 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import { ElevenLabsClient, play } from '@elevenlabs/elevenlabs-js';
-
-// Load environment variables
-dotenv.config();
+import multer from 'multer';
+import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
+import { Buffer } from 'buffer';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Configure multer for file uploads
+const upload = multer({
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only audio files are allowed'));
+    }
+  }
+});
+
+// Configure CORS to allow frontend on port 5173
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // Allow Vite dev server
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
+
 app.use(express.json());
 
 // Initialize ElevenLabs client
 let elevenlabsClient = null;
 
 if (process.env.ELEVENLABS_API_KEY) {
-  // Check if it's still the placeholder value
-  if (process.env.ELEVENLABS_API_KEY === 'your_api_key_here' ||
-      process.env.ELEVENLABS_API_KEY === 'ELEVENLABS_API_KEY') {
-    console.warn('⚠️  ELEVENLABS_API_KEY is still set to placeholder value');
-    console.warn('⚠️  Please set your actual ElevenLabs API key in backend/.env');
-    console.warn('⚠️  Get your API key from: https://elevenlabs.io/app/profile');
-  } else {
-    try {
-      elevenlabsClient = new ElevenLabsClient({
-        apiKey: process.env.ELEVENLABS_API_KEY
-      });
-      console.log('✅ ElevenLabs client initialized successfully');
-    } catch (error) {
-      console.error('❌ Failed to initialize ElevenLabs client:', error.message);
-    }
+  try {
+    elevenlabsClient = new ElevenLabsClient({
+      apiKey: process.env.ELEVENLABS_API_KEY
+    });
+    console.log('✅ ElevenLabs client initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize ElevenLabs client:', error.message);
   }
 } else {
   console.warn('⚠️  ELEVENLABS_API_KEY not found in environment variables');
-  console.warn('⚠️  Please create backend/.env file with your ElevenLabs API key');
 }
 
-// Music generation prompts for coding background
-const musicPrompts = [
-  'gentle ambient electronic music with soft synth pads and subtle beats, perfect for coding focus',
-  'calm lo-fi beats with smooth piano melodies and light percussion, ideal for concentration',
-  'atmospheric electronic soundscape with distant echoes and warm synthesizer textures',
-  'minimalist ambient music with soft arpeggios and gentle reverb, great for deep work',
-  'ethereal electronic composition with floating melodies and subtle rhythmic elements',
-  'peaceful electronic ambient with smooth transitions and harmonic progressions',
-  'soft electronic music with warm pads and delicate rhythmic patterns for coding sessions',
-  'tranquil synthesizer music with gentle modulations and ambient textures',
-  'calm electronic soundscape with subtle beats and melodic synth lines',
-  'minimal ambient electronic with smooth transitions and peaceful atmosphere'
-];
-
-// API Routes
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    timestamp: new Date().toISOString(),
-    elevenlabsReady: !!elevenlabsClient
+    message: 'Love\'s Legacy Backend is running',
+    elevenlabsClientInitialized: !!elevenlabsClient,
+    apiKeyConfigured: !!process.env.ELEVENLABS_API_KEY,
+    timestamp: new Date().toISOString()
   });
 });
 
-app.post('/api/generate-music', async (req, res) => {
+// Speech-to-text endpoint
+app.post('/api/speech-to-text', upload.single('audio'), async (req, res) => {
   try {
     if (!elevenlabsClient) {
       return res.status(500).json({
-        error: 'ElevenLabs client not initialized. Please check your ELEVENLABS_API_KEY environment variable.'
+        error: 'ElevenLabs client not initialized. Please check API key configuration.'
       });
     }
 
-    // Check if API key is available
-    if (!process.env.ELEVENLABS_API_KEY) {
-      return res.status(500).json({
-        error: 'ELEVENLABS_API_KEY environment variable is not set.'
-      });
+    if (!req.file) {
+      return res.status(400).json({ error: 'No audio file provided' });
     }
 
-    // Select random prompt
-    const randomPrompt = musicPrompts[Math.floor(Math.random() * musicPrompts.length)];
+    console.log(`🎤 Processing audio file: ${req.file.originalname} (${req.file.size} bytes)`);
 
-    console.log(`🎵 Generating music: ${randomPrompt}`);
+    // Convert buffer to readable stream for ElevenLabs
+    const audioBuffer = req.file.buffer;
 
-      // Try Sound Generation API first (works with free accounts)
-      let audio;
-      try {
-        console.log('🎵 Trying Sound Generation API...')
-        audio = await elevenlabsClient.soundGeneration.generate({
-          prompt: `Create ambient background music: ${randomPrompt}. Make it continuous, loopable, and suitable for coding focus.`,
-          durationSeconds: 30, // Generate 30-second clips
-          modelId: 'elevenlabs_sound_generation'
-        });
-      } catch (soundGenError) {
-        console.log('🎵 Sound Generation failed, trying Text-to-Speech fallback...')
-        // Fallback to text-to-speech if sound generation fails
-        audio = await elevenlabsClient.textToSpeech.convert(
-          'JBFqnCBsd6RMkjVDRZzb', // voice_id - using a calm voice
-          {
-            text: `Create ${randomPrompt}. Make it continuous and loopable.`,
-            modelId: 'eleven_multilingual_v2',
-            outputFormat: 'mp3_44100_128',
-          }
-        );
-      };
+    // Use ElevenLabs speech-to-text API
+    const transcription = await elevenlabsClient.speechToText.convert({
+      file: audioBuffer,
+      model_id: 'scribe_v1', // ElevenLabs speech-to-text model
+      tag_audio_events: true, // Enable audio event tagging
+      language_code: 'en', // Default to English, can be made configurable
+      timestamps_granularity: 'word' // Get word-level timestamps
+    });
 
-    // Get audio buffer
-    const audioBuffer = await audio.arrayBuffer();
-    const audioBase64 = Buffer.from(audioBuffer).toString('base64');
+    console.log('✅ Transcription completed');
 
     res.json({
       success: true,
-      prompt: randomPrompt,
-      audioData: audioBase64,
-      contentType: 'audio/mpeg'
+      transcription: transcription.text,
+      metadata: {
+        language: transcription.language_code,
+        duration: transcription.duration,
+        word_count: transcription.text.split(' ').length
+      },
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('❌ Music generation error:', error);
+    console.error('❌ Speech-to-text error:', error);
+
+    // Handle specific ElevenLabs errors
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({
+        error: 'ElevenLabs API error',
+        message: error.message,
+        statusCode: error.statusCode
+      });
+    }
+
     res.status(500).json({
-      error: 'Failed to generate music',
-      details: error.message
+      error: 'Failed to transcribe audio',
+      message: error.message
     });
   }
 });
@@ -129,20 +117,22 @@ app.post('/api/generate-music', async (req, res) => {
 // Error handling middleware
 app.use((error, req, res, next) => {
   console.error('Unhandled error:', error);
+
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File too large. Maximum size is 25MB.' });
+    }
+  }
+
   res.status(500).json({
-    error: 'Internal server error',
-    details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    error: 'An unexpected error occurred',
+    message: error.message
   });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-// Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Backend server running on http://localhost:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🎵 Music generation: POST http://localhost:${PORT}/api/generate-music`);
+  console.log(`🚀 Love's Legacy Backend server running on http://localhost:${PORT}`);
+  console.log(`💚 Health check: http://localhost:${PORT}/health`);
+  console.log(`🎤 Speech-to-text: POST http://localhost:${PORT}/api/speech-to-text`);
+  console.log(`📡 CORS enabled for frontend: http://localhost:5173`);
 });
