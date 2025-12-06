@@ -24,6 +24,19 @@ Love's Legacy 致力于为那些希望在离开时留下爱和回忆的人们提
 git clone <repository-url>
 cd 2025-Cursor-hackthon
 
+# 最简单的方式 - 一键启动
+./start.sh
+
+# start.sh 会自动：
+# - 检查系统依赖 (Node.js, pnpm, curl)
+# - 清理旧进程 (端口3000和5173)
+# - 安装项目依赖
+# - 启动后端服务 (端口3000)
+# - 启动前端应用 (端口5173)
+# - 等待服务就绪并显示状态
+
+# 或者手动方式：
+
 # 安装所有依赖
 pnpm install:all
 
@@ -40,6 +53,36 @@ pnpm dev:full
 # 访问应用
 # 💖 Love's Legacy: http://localhost:5173
 # 💚 后端健康检查: http://localhost:3000/health
+
+# 停止服务
+# 在运行 start.sh 的终端按 Ctrl+C，或运行：
+pkill -f "pnpm dev" && pkill -f "node.*server.js"
+```
+
+### 获取ElevenLabs API密钥
+
+Love's Legacy使用ElevenLabs的语音转文字API来转录录音信息：
+
+#### 步骤 1: 注册ElevenLabs账户
+1. 访问 [elevenlabs.io](https://elevenlabs.io/) 并注册账户
+2. 验证邮箱后登录账户
+
+#### 步骤 2: 获取API密钥
+1. 点击右上角头像 → "Profile"
+2. 滚动到 "API Key" 部分
+3. 点击 "Create" 或复制现有的API密钥
+
+#### 步骤 3: 配置环境变量
+1. 打开 `backend/.env` 文件
+2. 替换 `your_api_key_here` 为你的实际API密钥：
+   ```
+   ELEVENLABS_API_KEY=sk_1234567890abcdef...你的真实密钥
+   ```
+
+#### 验证配置
+重新启动后端服务，你应该看到：
+```
+✅ ElevenLabs client initialized successfully
 ```
 
 ### 其他命令
@@ -57,23 +100,24 @@ pnpm lint
 
 ## ✨ 应用特色
 
-### 💌 **爱的讯息**
+### 💌 **爱的讯息** ✅ 已实现
 - 写下温暖的话语和珍贵的回忆
 - 富文本编辑器，支持长篇文章
-- 保存草稿和编辑现有消息
+- 保存到本地存储，支持编辑和删除
+- 美观的消息卡片展示
 
-### 📸 **珍贵回忆**
+### 📸 **珍贵回忆** 🚧 即将推出
 - 拖拽上传照片
 - 添加标题和描述
 - 网格布局展示，悬停预览
 
-### 🎤 **心声录音**
+### 🎤 **心声录音** 🚧 即将推出
 - 浏览器录音功能
 - 实时时长显示和可视化
-- 模拟文字转录（未来可集成真实API）
+- ElevenLabs语音转文字API集成
 - 播放和下载选项
 
-### 📅 **未来传递**
+### 📅 **未来传递** 🚧 即将推出
 - 日历和时间选择器
 - 安排未来某个时刻的传递
 - 状态跟踪和倒计时显示
