@@ -13,6 +13,12 @@ Love's Legacy is dedicated to providing a warm, safe digital space for people wh
 - **🎤 Record heartfelt voices** - Leave voice messages and personal stories
 - **📅 Schedule delivery** - Arrange delivery at important future moments
 
+## 📱 App Preview
+
+![Love's Legacy App](love-legacy/public/app-snapshot.png)
+
+*A beautiful, compassionate interface for creating digital legacy capsules*
+
 ## 🚀 Quick Start
 
 ### Prerequisites
