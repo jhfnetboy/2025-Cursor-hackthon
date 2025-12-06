@@ -1,18 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, Camera, Heart, Calendar, Users } from 'lucide-react';
 import './App.css';
 
 // Import components
 import MessageComposer from './components/MessageComposer';
-
-// Placeholder components
-const PhotoManager = () => <div className="component-placeholder">📸 Photo Manager - Coming Soon</div>;
-const VoiceRecorder = () => <div className="component-placeholder">🎤 Voice Recorder - Coming Soon</div>;
-const ScheduleManager = () => <div className="component-placeholder">📅 Schedule Manager - Coming Soon</div>;
+import PhotoManager from './components/PhotoManager';
+import VoiceRecorder from './components/VoiceRecorder';
+import ScheduleManager from './components/ScheduleManager';
+import ShareView from './components/ShareView';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'messages' | 'photos' | 'voice' | 'schedule'>('messages');
+  const [shareView, setShareView] = useState<{
+    contentType: 'message' | 'photo' | 'voice';
+    contentId: string;
+  } | null>(null);
+
+  // Check for share URL on mount
+  useEffect(() => {
+    const path = window.location.pathname;
+    const shareMatch = path.match(/^\/share\/(message|photo|voice)\/(.+)$/);
+
+    if (shareMatch) {
+      const [, contentType, contentId] = shareMatch;
+      setShareView({
+        contentType: contentType as 'message' | 'photo' | 'voice',
+        contentId
+      });
+    }
+  }, []);
 
   const tabs = [
     { id: 'messages', label: 'Love Letters', icon: MessageCircle, color: 'from-pink-400 to-rose-500' },
@@ -35,6 +52,18 @@ function App() {
         return <MessageComposer />;
     }
   };
+
+  // If we're in share view, show the share component
+  if (shareView) {
+    return (
+      <div className="app">
+        <ShareView
+          contentType={shareView.contentType}
+          contentId={shareView.contentId}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="app">

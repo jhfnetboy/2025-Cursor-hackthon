@@ -106,6 +106,16 @@ start_backend() {
         echo "ELEVENLABS_API_KEY=your_api_key_here" > backend/.env
         echo "PORT=3000" >> backend/.env
         print_warning "Please update backend/.env with your actual ElevenLabs API key"
+        print_info "💡 For full speech-to-text: Upgrade to Creator plan ($22/month) at https://elevenlabs.io/pricing"
+        print_info "🔄 Without API key: App will use mock transcription for development"
+        speechToTextEnabled=false
+    else
+        # Check if API key is configured (not placeholder)
+        if grep -q "ELEVENLABS_API_KEY=your_api_key_here" backend/.env; then
+            speechToTextEnabled=false
+        else
+            speechToTextEnabled=true
+        fi
     fi
 
     # Navigate to backend directory and start
@@ -249,7 +259,10 @@ main() {
     echo -e "   ${CYAN}💚 Backend API:${NC} http://localhost:3000"
     echo -e "   ${CYAN}💚 Health Check:${NC} http://localhost:3000/health"
     echo ""
-    echo -e "${YELLOW}📝 Note: Make sure to configure your ElevenLabs API key in backend/.env${NC}"
+    echo -e "${YELLOW}🎤 Voice Features:${NC}"
+    echo -e "   ${speechToTextEnabled:+${GREEN}✅ Real AI transcription available${NC}}"
+    echo -e "   ${speechToTextEnabled:+${YELLOW}📝 Note: Configure ElevenLabs API key in backend/.env for full speech-to-text${NC}}"
+    echo -e "   ${!speechToTextEnabled:+${BLUE}🔄 Using mock transcription (upgrade account for real AI)${NC}}"
     echo ""
     print_info "Press Ctrl+C to stop all services"
 
