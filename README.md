@@ -232,13 +232,16 @@ loves-legacy/
 │   ├── Features.md
 │   ├── Plan.md
 │   ├── Changes.md
-│   └── Deploy.md
+│   ├── Deploy.md
+│   └── Love_s_Legacy.pdf     # Presentation slides
 └── README.md                  # Project documentation
 ```
 
 ## 📚 Documentation
 
 Detailed documentation available in [docs/](docs/) directory.
+
+📄 **[Download PDF Presentation](docs/Love_s_Legacy.pdf)** - Complete project presentation slides
 
 ## 🌟 Design Philosophy
 
@@ -506,13 +509,16 @@ loves-legacy/
 │   ├── Features.md
 │   ├── Plan.md
 │   ├── Changes.md
-│   └── Deploy.md
+│   ├── Deploy.md
+│   └── Love_s_Legacy.pdf     # 演示幻灯片
 └── README.md                  # 项目说明
 ```
 
 ## 📚 文档
 
 详细文档请查看 [docs/](docs/) 目录。
+
+📄 **[下载 PDF 演示文稿](docs/Love_s_Legacy.pdf)** - 完整项目演示幻灯片
 
 ## 🌟 设计理念
 
