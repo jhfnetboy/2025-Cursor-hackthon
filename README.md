@@ -181,7 +181,7 @@ pnpm lint
 - Generate directly accessible share links
 - Local storage and scheduled task management
 - Form validation and error handling
-- *Note: Current demo version, emails will not actually send*
+- *Note: Emails are simulated for demo - they appear to send successfully*
 
 ### 🎨 **Warm Interface**
 - Design full of love and care
