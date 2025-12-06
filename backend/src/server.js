@@ -20,16 +20,25 @@ app.use(express.json());
 let elevenlabsClient = null;
 
 if (process.env.ELEVENLABS_API_KEY) {
-  try {
-    elevenlabsClient = new ElevenLabsClient({
-      apiKey: process.env.ELEVENLABS_API_KEY
-    });
-    console.log('✅ ElevenLabs client initialized successfully');
-  } catch (error) {
-    console.error('❌ Failed to initialize ElevenLabs client:', error.message);
+  // Check if it's still the placeholder value
+  if (process.env.ELEVENLABS_API_KEY === 'your_api_key_here' ||
+      process.env.ELEVENLABS_API_KEY === 'ELEVENLABS_API_KEY') {
+    console.warn('⚠️  ELEVENLABS_API_KEY is still set to placeholder value');
+    console.warn('⚠️  Please set your actual ElevenLabs API key in backend/.env');
+    console.warn('⚠️  Get your API key from: https://elevenlabs.io/app/profile');
+  } else {
+    try {
+      elevenlabsClient = new ElevenLabsClient({
+        apiKey: process.env.ELEVENLABS_API_KEY
+      });
+      console.log('✅ ElevenLabs client initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize ElevenLabs client:', error.message);
+    }
   }
 } else {
   console.warn('⚠️  ELEVENLABS_API_KEY not found in environment variables');
+  console.warn('⚠️  Please create backend/.env file with your ElevenLabs API key');
 }
 
 // Music generation prompts for coding background
@@ -59,7 +68,14 @@ app.post('/api/generate-music', async (req, res) => {
   try {
     if (!elevenlabsClient) {
       return res.status(500).json({
-        error: 'ElevenLabs client not initialized. Please check your API key.'
+        error: 'ElevenLabs client not initialized. Please check your ELEVENLABS_API_KEY environment variable.'
+      });
+    }
+
+    // Check if API key is available
+    if (!process.env.ELEVENLABS_API_KEY) {
+      return res.status(500).json({
+        error: 'ELEVENLABS_API_KEY environment variable is not set.'
       });
     }
 
@@ -68,15 +84,27 @@ app.post('/api/generate-music', async (req, res) => {
 
     console.log(`🎵 Generating music: ${randomPrompt}`);
 
-    // Generate audio using ElevenLabs
-    const audio = await elevenlabsClient.textToSpeech.convert(
-      'JBFqnCBsd6RMkjVDRZzb', // voice_id - using a calm voice
-      {
-        text: `Create ${randomPrompt}. Make it continuous and loopable.`,
-        modelId: 'eleven_multilingual_v2',
-        outputFormat: 'mp3_44100_128',
-      }
-    );
+      // Try Sound Generation API first (works with free accounts)
+      let audio;
+      try {
+        console.log('🎵 Trying Sound Generation API...')
+        audio = await elevenlabsClient.soundGeneration.generate({
+          prompt: `Create ambient background music: ${randomPrompt}. Make it continuous, loopable, and suitable for coding focus.`,
+          durationSeconds: 30, // Generate 30-second clips
+          modelId: 'elevenlabs_sound_generation'
+        });
+      } catch (soundGenError) {
+        console.log('🎵 Sound Generation failed, trying Text-to-Speech fallback...')
+        // Fallback to text-to-speech if sound generation fails
+        audio = await elevenlabsClient.textToSpeech.convert(
+          'JBFqnCBsd6RMkjVDRZzb', // voice_id - using a calm voice
+          {
+            text: `Create ${randomPrompt}. Make it continuous and loopable.`,
+            modelId: 'eleven_multilingual_v2',
+            outputFormat: 'mp3_44100_128',
+          }
+        );
+      };
 
     // Get audio buffer
     const audioBuffer = await audio.arrayBuffer();

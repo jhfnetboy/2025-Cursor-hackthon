@@ -1,0 +1,272 @@
+/* Leaving the World - App Styles */
+.app {
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #FF6B9D 0%, #C44569 25%, #F8B500 50%, #FF8A80 75%, #FCE4EC 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Animated Background */
+.animated-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.floating-shapes {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.floating-shape {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 20px rgba(255, 107, 157, 0.3);
+}
+
+.floating-shape:nth-child(3n) {
+  background: rgba(248, 181, 0, 0.1);
+  box-shadow: 0 0 20px rgba(248, 181, 0, 0.3);
+}
+
+.floating-shape:nth-child(5n) {
+  background: rgba(255, 138, 128, 0.1);
+  box-shadow: 0 0 20px rgba(255, 138, 128, 0.3);
+}
+
+/* Header */
+.app-header {
+  position: relative;
+  z-index: 10;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: white;
+}
+
+.header-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.logo-section {
+  margin-bottom: 1.5rem;
+}
+
+.logo-heart {
+  color: #ff6b9d;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 4px 8px rgba(255, 107, 157, 0.3));
+}
+
+.app-title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.app-subtitle {
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  font-weight: 300;
+  margin: 0 0 1.5rem 0;
+  opacity: 0.9;
+}
+
+.header-description {
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+  line-height: 1.6;
+  opacity: 0.85;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Main Content */
+.main-content {
+  position: relative;
+  z-index: 10;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.nav-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.nav-tab:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.nav-tab.active {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.nav-tab.active .tab-indicator {
+  opacity: 1;
+}
+
+/* Content Area */
+.content-area {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Footer */
+.app-footer {
+  position: relative;
+  z-index: 10;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: white;
+}
+
+.footer-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.footer-content p {
+  margin: 0 0 1rem 0;
+  opacity: 0.8;
+  line-height: 1.6;
+}
+
+.inline-heart {
+  color: #ff6b9d;
+  vertical-align: middle;
+  margin: 0 0.25rem;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .nav-tabs {
+    gap: 0.5rem;
+  }
+
+  .nav-tab {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .nav-tab span {
+    display: none;
+  }
+
+  .content-area {
+    padding: 1.5rem;
+  }
+
+  .app-header {
+    padding: 1.5rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-tabs {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .nav-tab {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+  }
+
+  .content-area {
+    padding: 1rem;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .floating-shape,
+  .nav-tab {
+    animation: none;
+  }
+}
+
+/* Focus states */
+.nav-tab:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .animated-bg,
+  .nav-tabs {
+    display: none;
+  }
+
+  .content-area {
+    background: white;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}

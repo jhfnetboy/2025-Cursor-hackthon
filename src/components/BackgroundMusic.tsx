@@ -18,16 +18,35 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ onMusicStateChange })
   useEffect(() => {
     const checkBackendHealth = async () => {
       try {
-        const response = await fetch(`${BACKEND_URL}/health`)
+        const response = await fetch(`${BACKEND_URL}/health`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+        })
+
         if (response.ok) {
-          setBackendStatus('online')
+          const contentType = response.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            const healthData = await response.json()
+            if (healthData.status === 'ok') {
+              setBackendStatus('online')
+              setError('')
+            } else {
+              setBackendStatus('offline')
+              setError('Backend service health check failed')
+            }
+          } else {
+            setBackendStatus('offline')
+            setError('Backend service returned invalid response format')
+          }
         } else {
           setBackendStatus('offline')
-          setError('Backend service is not responding correctly')
+          setError(`Backend service error: ${response.status} ${response.statusText}`)
         }
       } catch (err) {
         setBackendStatus('offline')
-        setError('Cannot connect to backend service. Please start the backend server.')
+        setError('Cannot connect to backend service. Please ensure the backend server is running on port 3000.')
         console.error('Backend health check failed:', err)
       }
     }
@@ -70,9 +89,9 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ onMusicStateChange })
               errorMessage = textContent.substring(0, 200) // Limit error message length
             }
           }
-        } catch (parseError) {
+        } catch {
           // If JSON parsing fails, use default error message
-          console.error('Failed to parse error response:', parseError)
+          console.error('Failed to parse error response')
         }
         throw new Error(errorMessage)
       }
@@ -80,7 +99,7 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ onMusicStateChange })
       let data
       try {
         data = await response.json()
-      } catch (parseError) {
+      } catch {
         throw new Error('Invalid JSON response from server')
       }
 
@@ -123,12 +142,22 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ onMusicStateChange })
 
       console.log('✅ Music generated and playing:', data.prompt)
 
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to generate music'
-      setError(errorMessage)
-      console.error('❌ Music generation error:', err)
-      setIsLoading(false)
-    }
+        } catch (err) {
+          let errorMessage = err instanceof Error ? err.message : 'Failed to generate music'
+
+          // Provide more helpful error messages for common issues
+          if (errorMessage.includes('401') || errorMessage.includes('invalid_api_key')) {
+            errorMessage = 'Invalid ElevenLabs API key. Please check your backend/.env file and ensure you have a valid API key from https://elevenlabs.io/app/profile'
+          } else if (errorMessage.includes('missing_permissions')) {
+            errorMessage = 'API key lacks text-to-speech permissions. Please upgrade your ElevenLabs account or regenerate your API key at https://elevenlabs.io/app/profile'
+          } else if (errorMessage.includes('Backend service is not available')) {
+            errorMessage = 'Backend service is not running. Please start it with: pnpm dev:backend'
+          }
+
+          setError(errorMessage)
+          console.error('❌ Music generation error:', err)
+          setIsLoading(false)
+        }
   }, [backendStatus])
 
   // Handle play/pause
@@ -198,10 +227,16 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ onMusicStateChange })
                 <span className="error-text">{error}</span>
               </div>
             )}
-            {backendStatus === 'offline' && !error && (
+            {backendStatus === 'offline' && (
               <div className="error-indicator">
                 <span className="error-icon">🔌</span>
                 <span className="error-text">Backend service offline</span>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="retry-button"
+                >
+                  🔄 Retry
+                </button>
               </div>
             )}
             {currentTrack && !error && backendStatus === 'online' && (
@@ -382,6 +417,22 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ onMusicStateChange })
           padding: 12px 16px;
           border-radius: 12px;
           border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .retry-button {
+          margin-left: 8px;
+          padding: 4px 8px;
+          border: none;
+          border-radius: 6px;
+          background: rgba(255, 107, 107, 0.2);
+          color: #ff6b6b;
+          font-size: 12px;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .retry-button:hover {
+          background: rgba(255, 107, 107, 0.3);
         }
 
         .error-icon {
