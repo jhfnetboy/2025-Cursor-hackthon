@@ -57,11 +57,32 @@ const BackgroundMusic: React.FC<BackgroundMusicProps> = ({ onMusicStateChange })
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to generate music')
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`
+        try {
+          const contentType = response.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json()
+            errorMessage = errorData.error || errorMessage
+          } else {
+            // If not JSON, try to get text content
+            const textContent = await response.text()
+            if (textContent) {
+              errorMessage = textContent.substring(0, 200) // Limit error message length
+            }
+          }
+        } catch (parseError) {
+          // If JSON parsing fails, use default error message
+          console.error('Failed to parse error response:', parseError)
+        }
+        throw new Error(errorMessage)
       }
 
-      const data = await response.json()
+      let data
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        throw new Error('Invalid JSON response from server')
+      }
 
       if (!data.success || !data.audioData) {
         throw new Error('Invalid response from backend')

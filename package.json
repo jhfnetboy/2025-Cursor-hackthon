@@ -8,7 +8,7 @@
     "dev:backend": "cd backend && pnpm dev",
     "dev:full": "echo 'Run these commands in separate terminals:' && echo 'Terminal 1: pnpm dev:backend' && echo 'Terminal 2: pnpm dev'",
     "build": "vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --ignore-pattern 'backend/**'",
     "preview": "vite preview"
   },
   "dependencies": {

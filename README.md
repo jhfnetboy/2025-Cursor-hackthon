@@ -4,11 +4,13 @@
 
 ## 🚀 技术栈
 
-- **前端框架**: React 18
+- **前端框架**: React 18 + TypeScript
+- **后端框架**: Node.js + Express
+- **AI服务**: ElevenLabs API (安全后端集成)
 - **构建工具**: Vite 6
-- **语言**: TypeScript
 - **包管理器**: pnpm
 - **代码质量**: ESLint
+- **视觉效果**: HTML5 Canvas + 粒子系统
 
 ## 📦 快速开始
 
@@ -23,17 +25,24 @@
 git clone <repository-url>
 cd 2025-Cursor-hackthon
 
-# 安装依赖
+# 安装前端依赖
 pnpm install
 
-# 配置环境变量 (可选，用于背景音乐功能)
-cp .env.example .env
-# 编辑 .env 文件，添加你的 ElevenLabs API 密钥
+# 配置后端API密钥
+echo "ELEVENLABS_API_KEY=your_actual_api_key_here" > backend/.env
 
-# 启动开发服务器
+# 安装后端依赖
+cd backend && pnpm install && cd ..
+
+# 启动开发环境 (需要两个终端)
+# 终端1: 启动后端服务 (端口3000)
+pnpm dev:backend
+
+# 终端2: 启动前端服务 (端口5173)
 pnpm dev
 
-# 访问 http://localhost:3000
+# 访问前端应用
+# http://localhost:5173
 ```
 
 ### 获取ElevenLabs API密钥
@@ -42,10 +51,16 @@ pnpm dev
 
 1. 访问 [elevenlabs.io](https://elevenlabs.io/) 注册账户
 2. 进入设置页面获取API密钥
-3. 将密钥添加到 `.env` 文件中：
+3. 将密钥添加到 `backend/.env` 文件中：
    ```
-   VITE_ELEVENLABS_API_KEY=你的实际API密钥
+   ELEVENLABS_API_KEY=你的实际API密钥
    ```
+
+### 架构说明
+
+- **前端 (端口5173)**: React应用，处理用户界面和粒子效果
+- **后端 (端口3000)**: Node.js/Express服务器，安全存储API密钥并调用ElevenLabs API
+- **安全性**: API密钥仅存储在后端，永远不会暴露给前端
 
 ### 其他命令
 

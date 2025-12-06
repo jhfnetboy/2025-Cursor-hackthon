@@ -82,6 +82,103 @@ server {
 }
 ```
 
+## 前后端分离部署架构
+
+### 后端服务部署
+后端服务需要独立部署，负责安全存储API密钥和处理ElevenLabs API调用。
+
+#### PM2生产部署
+```bash
+# 安装PM2 (生产环境进程管理)
+npm install -g pm2
+
+# 创建PM2配置文件
+cat > backend/ecosystem.config.js << EOF
+module.exports = {
+  apps: [{
+    name: 'ai-music-backend',
+    script: 'src/server.js',
+    instances: 1,
+    env: {
+      NODE_ENV: 'production',
+      PORT: 3000
+    }
+  }]
+}
+EOF
+
+# 启动后端服务
+cd backend
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup
+```
+
+#### Docker容器化部署
+```dockerfile
+# backend/Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+```bash
+# 构建和运行Docker容器
+cd backend
+docker build -t ai-music-backend .
+docker run -p 3000:3000 --env-file .env ai-music-backend
+```
+
+### 前端代理配置
+更新Nginx配置以代理API请求到后端：
+
+```nginx
+server {
+    listen 80;
+    server_name your-frontend-domain.com;
+    root /path/to/dist;
+    index index.html;
+
+    # SPA路由处理
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # API代理到后端服务
+    location /api/ {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # 缓存静态资源
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+```
+
+### 环境变量配置
+
+#### 后端环境变量 (backend/.env)
+```bash
+ELEVENLABS_API_KEY=your_production_api_key
+NODE_ENV=production
+PORT=3000
+```
+
+#### 前端环境变量 (构建时)
+```bash
+VITE_API_BASE_URL=https://your-api-domain.com
+```
+
 ## 维护脚本
 
 ### 开发维护脚本
