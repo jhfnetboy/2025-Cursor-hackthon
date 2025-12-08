@@ -1,6 +1,7 @@
 # 💖 Love's Legacy
 
 A compassionate digital time capsule for leaving messages, photos, and memories for loved ones. Create warm legacy capsules to preserve important words, precious moments, and inner thoughts for future generations.
+Onsite：<img src="https://raw.githubusercontent.com/jhfnetboy/MarkDownImg/main/img/202512081038480.jpg"/>
 
 **📖 [中文文档](#chinese-documentation)**
 
